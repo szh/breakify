@@ -3,9 +3,17 @@
 
     <string name="app_name">Breakify</string>
     <string name="start">START</string>
-    <string name="stop">STOP</string>
-    <string name="reset">Reset</string>
-    <string name="workFor">Work for (mins):</string>
-    <string name="breakFor">Break for (mins)</string>
+    <string name="stop">PAUSE</string>
+    <string name="resume">RESUME</string>
+    <string name="reset">RESET</string>
+    <string name="work_for">Work for (mins):</string>
+    <string name="break_for">Break for (mins)</string>
+    <string name="state_working">WORKING</string>
+    <string name="state_breaking">BREAKING</string>
+    <string name="start_break_prompt">Ready to go on to your break?</string>
+    <string name="start_work_prompt">Ready to resume working?</string>
+    <string name="ok">OK</string>
+    <string name="snooze">Snooze</string>
+    <string name="cancel">Cancel</string>
 
 </resources>

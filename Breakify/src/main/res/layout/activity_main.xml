@@ -2,17 +2,27 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:layout_marginTop="@dimen/activity_vertical_margin"
+    android:layout_marginBottom="@dimen/activity_vertical_margin"
+    android:layout_marginStart="@dimen/activity_horizontal_margin"
+    android:layout_marginEnd="@dimen/activity_horizontal_margin"
     android:orientation="vertical"
     tools:context=".MainActivity"
     android:gravity="center">
 
+
+    <TextView
+        android:id="@+id/stateLbl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:lines="1"
+        android:textSize="32sp"
+        android:text="@string/state_working"/>
+
     <FrameLayout
         android:id="@+id/clockFrame"
         android:padding="16dp"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="32dp"
         android:layout_width="250dp"
         android:layout_height="250dp"
@@ -51,7 +61,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/workFor"
+                android:text="@string/work_for"
                 android:textSize="18sp"
                 android:paddingBottom="2dp" />
             <NumberPicker
@@ -69,7 +79,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/breakFor"
+                android:text="@string/break_for"
                 android:textSize="18sp"
                 android:paddingBottom="2dp" />
             <NumberPicker
