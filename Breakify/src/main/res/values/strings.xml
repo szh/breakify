@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Breakify</string>
+    <string name="start">START</string>
+    <string name="stop">STOP</string>
+    <string name="reset">Reset</string>
+    <string name="workFor">Work for (mins):</string>
+    <string name="breakFor">Break for (mins)</string>
+
+</resources>
