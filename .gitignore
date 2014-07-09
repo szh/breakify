@@ -1,5 +1,4 @@
-*.gradle
-gradle*
+.gradle
 .idea
 build/
 /local.properties
