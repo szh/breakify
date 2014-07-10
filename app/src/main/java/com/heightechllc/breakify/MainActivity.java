@@ -6,7 +6,10 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 
@@ -30,6 +33,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     // UI Components
     CircleTimerView circleTimer;
+    TextView stateLbl;
+    TextView timeLbl;
+    TextView startStopLbl;
+    Button resetBtn;
+    LinearLayout timerSettingsLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +50,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         circleTimer = (CircleTimerView) findViewById(R.id.circle_timer);
         circleTimer.setOnClickListener(this);
 
+        stateLbl = (TextView) findViewById(R.id.state_lbl);
+        timeLbl = (TextView) findViewById(R.id.time_lbl);
+        startStopLbl = (TextView) findViewById(R.id.start_stop_lbl);
+
         NumberPicker workNumPicker = (NumberPicker) findViewById(R.id.work_num_picker);
         workNumPicker.setMinValue(1);
         workNumPicker.setMaxValue(300);
@@ -52,8 +64,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         breakNumPicker.setMaxValue(300);
         breakNumPicker.setValue(10);
 
-        Button resetBtn = (Button) findViewById(R.id.reset_btn);
+        resetBtn = (Button) findViewById(R.id.reset_btn);
         resetBtn.setOnClickListener(this);
+
+        timerSettingsLayout = (LinearLayout) findViewById(R.id.timer_settings_layout);
     }
 
     @Override
@@ -78,8 +92,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
      */
     private void startTimer(long duration) {
         // First hide the number pickers and show the "Reset" btn (TODO: Animate)
-        findViewById(R.id.timer_settings_layout).setVisibility(View.GONE);
-        findViewById(R.id.reset_btn).setVisibility(View.VISIBLE);
+        timerSettingsLayout.setVisibility(View.GONE);
+        resetBtn.setVisibility(View.VISIBLE);
 
         // Update timer display
         updateTimeLbl(duration);
@@ -106,7 +120,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 // Update the time display
                 updateTimeLbl(0);
                 // Hide the start / pause btn (TODO: Animate)
-                findViewById(R.id.start_stop_lbl).setVisibility(View.INVISIBLE);
+                startStopLbl.setVisibility(View.INVISIBLE);
 
                 // Prompt to start break / resume work with dialog
                 promptToSwitchWorkStates();
@@ -114,7 +128,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         };
 
         // Update the start / stop label
-        TextView startStopLbl = (TextView) findViewById(R.id.start_stop_lbl);
         startStopLbl.setVisibility(View.VISIBLE);
         startStopLbl.setText(R.string.stop);
 
@@ -160,15 +173,16 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * Pauses the break timer
      */
     private void pauseTimer() {
-        // TODO: Blink time display while paused
-
         _countDownTimer.cancel();
         timerState = PAUSED;
 
         // Update the start / stop label
-        TextView startStopLbl = (TextView) findViewById(R.id.start_stop_lbl);
         startStopLbl.setVisibility(View.VISIBLE);
         startStopLbl.setText(R.string.resume);
+
+        // Blink the time display while paused
+        Animation blinkAnim = AnimationUtils.loadAnimation(this, R.anim.blink);
+        timeLbl.startAnimation(blinkAnim);
 
         circleTimer.pauseIntervalAnimation();
     }
@@ -178,19 +192,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
         timerState = STOPPED;
 
         // Reset the UI (TODO: Animate)
-        TextView timeLbl = (TextView) findViewById(R.id.time_lbl);
+        timeLbl.clearAnimation();
         timeLbl.setText("");
 
-        findViewById(R.id.timer_settings_layout).setVisibility(View.VISIBLE);
-        findViewById(R.id.reset_btn).setVisibility(View.GONE);
+        timerSettingsLayout.setVisibility(View.VISIBLE);
+        resetBtn.setVisibility(View.GONE);
 
         // Back to initial state
         workState = WORK;
-        TextView stateLbl = (TextView) findViewById(R.id.state_lbl);
         stateLbl.setText(R.string.state_working);
 
         // Update the start / stop label
-        TextView startStopLbl = (TextView) findViewById(R.id.start_stop_lbl);
         startStopLbl.setVisibility(View.VISIBLE);
         startStopLbl.setText(R.string.start);
 
@@ -200,11 +212,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
 
     private void updateTimeLbl(long millis) {
+        // Stop blinking the time display
+        timeLbl.clearAnimation();
+
         // Get formatted time string
         String timeStr = formatTime(millis);
 
         // Update the clock
-        TextView timeLbl = (TextView) findViewById(R.id.time_lbl);
         timeLbl.setText(timeStr);
     }
 
@@ -250,7 +264,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
      */
     private void switchWorkStates() {
         // Set the new state
-        TextView stateLbl = (TextView) findViewById(R.id.state_lbl);
         if (workState == WORK) {
             workState = BREAK;
             stateLbl.setText(R.string.state_breaking);
