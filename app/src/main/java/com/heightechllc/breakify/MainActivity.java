@@ -180,9 +180,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         startStopLbl.setVisibility(View.VISIBLE);
         startStopLbl.setText(R.string.resume);
 
-        // Blink the time display while paused
+        // Blink the time and state labels while paused
         Animation blinkAnim = AnimationUtils.loadAnimation(this, R.anim.blink);
         timeLbl.startAnimation(blinkAnim);
+        stateLbl.startAnimation(blinkAnim);
 
         circleTimer.pauseIntervalAnimation();
     }
@@ -193,6 +194,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         // Reset the UI (TODO: Animate)
         timeLbl.clearAnimation();
+        stateLbl.clearAnimation();
         timeLbl.setText("");
 
         timerSettingsLayout.setVisibility(View.VISIBLE);
@@ -212,8 +214,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
 
     private void updateTimeLbl(long millis) {
-        // Stop blinking the time display
+        // Stop blinking the time and state labels
         timeLbl.clearAnimation();
+        stateLbl.clearAnimation();
 
         // Get formatted time string
         String timeStr = formatTime(millis);
