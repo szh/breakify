@@ -3,7 +3,6 @@ package com.heightechllc.breakify;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.SystemClock;
@@ -19,6 +18,7 @@ import android.view.View;
 public class CircleTimerView extends View implements View.OnTouchListener {
 
     private int redColor;
+    private int redColorPressed;
     private int borderColor;
     private int borderColorPressed;
     private int backgroundColor;
@@ -139,12 +139,12 @@ public class CircleTimerView extends View implements View.OnTouchListener {
         borderPaint.setStyle(Paint.Style.STROKE);
         borderColor = resources.getColor(R.color.timer_border);
         borderColorPressed = resources.getColor(R.color.timer_border_pressed);
-        redColor = Color.RED;
+        redColor = resources.getColor(R.color.timer_red);
+        redColorPressed = resources.getColor(R.color.timer_red_pressed);
         backgroundColor = resources.getColor(R.color.clock_color);
         screenDensity = resources.getDisplayMetrics().density;
         redDotPaint.setAntiAlias(true);
         redDotPaint.setStyle(Paint.Style.FILL);
-        redDotPaint.setColor(redColor);
         backgroundPaint.setAntiAlias(true);
         backgroundPaint.setStyle(Paint.Style.FILL);
         backgroundPaint.setColor(backgroundColor);
@@ -185,7 +185,7 @@ public class CircleTimerView extends View implements View.OnTouchListener {
 
         if (intervalStartTime == -1) {
             // just draw a complete white circle, no red arc needed
-            borderPaint.setColor(pressed ? borderColorPressed : borderColor);
+            borderPaint.setColor(getBorderColor());
             canvas.drawCircle(xCenter, yCenter, radius, borderPaint);
             drawRedDot(canvas, 0f, xCenter, yCenter, radius);
         } else {
@@ -203,12 +203,12 @@ public class CircleTimerView extends View implements View.OnTouchListener {
 
             float whitePercent = 1 - (redPercent > 1 ? 1 : redPercent);
             // draw red arc here
-            borderPaint.setColor(redColor);
+            borderPaint.setColor(getRedColor());
             canvas.drawArc(arcRect, 270, -redPercent * 360, false, borderPaint);
 
             // draw white arc here
             borderPaint.setStrokeWidth(strokeSize);
-            borderPaint.setColor(pressed ? borderColorPressed : borderColor);
+            borderPaint.setColor(getBorderColor());
             canvas.drawArc(arcRect, 270, +whitePercent * 360, false, borderPaint);
 
             if (markerTime != -1 && radius > 0 && totalIntervalTime != 0) {
@@ -240,13 +240,32 @@ public class CircleTimerView extends View implements View.OnTouchListener {
 
     protected void drawRedDot(
             Canvas canvas, float degrees, int xCenter, int yCenter, float radius) {
-        borderPaint.setColor(redColor);
         float dotPercent;
         dotPercent = 270 - degrees * 360;
+
+        // Select color based on whether the view is pressed
+        redDotPaint.setColor(getRedColor());
 
         final double dotRadians = Math.toRadians(dotPercent);
         canvas.drawCircle(xCenter + (float) (radius * Math.cos(dotRadians)),
                 yCenter + (float) (radius * Math.sin(dotRadians)), dotRadius, redDotPaint);
+    }
+
+    //
+    // HELPERS
+    //
+
+    /**
+     * Get the correct border color for the current `pressed` state
+     */
+    protected int getBorderColor() {
+        return pressed ? borderColorPressed : borderColor;
+    }
+    /**
+     * Get the correct red color for the current `pressed` state
+     */
+    protected int getRedColor() {
+        return pressed ? redColorPressed : redColor;
     }
 
 }
