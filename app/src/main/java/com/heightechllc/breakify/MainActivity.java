@@ -85,8 +85,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // Show the "Reset" btn (TODO: Animate)
         resetBtn.setVisibility(View.VISIBLE);
 
-        // Update timer display
-        updateTimeLbl(duration);
+        // We don't need to call updateTimeLbl() now, since it's called in _countDownTimer.onTick(),
+        //  which is called for the first time immediately after starting it.
 
         /*
          *  Create the count down timer, which functions are:
@@ -284,11 +284,26 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * @return The formatted string
      */
     private String formatTime(long millis) {
+        String timeStr = "";
+
+        // Start with hours, if there are any
+        long hours = TimeUnit.MILLISECONDS.toHours(millis);
+        if (hours > 0)
+        {
+            timeStr = hours + ":";
+            // Remove the milliseconds of the hours from `millis`, so they don't get counted as
+            //  minutes too (we do similar thing in calculating seconds, see below)
+            millis -= TimeUnit.HOURS.toMillis(hours);
+        }
+
+        // Now calculate the minutes and seconds
         // The '02' makes sure it's 2 digits
-        return String.format("%02d:%02d",
+        timeStr += String.format("%02d:%02d",
                 TimeUnit.MILLISECONDS.toMinutes(millis),
                 TimeUnit.MILLISECONDS.toSeconds(millis) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis))
         );
+
+        return timeStr;
     }
 }
