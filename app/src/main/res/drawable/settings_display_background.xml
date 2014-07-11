@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="14dp" />
+    <gradient
+        android:startColor="@color/clock_color_alpha_half"
+        android:endColor="@color/clock_color_alpha_half"
+        android:centerColor="@color/clock_color"
+        android:angle="45"/>
+    <stroke android:color="#aa000000" android:width="2dp" />
+</shape>

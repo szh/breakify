@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="clock_color">#09C7EB</color>
+    <color name="clock_color_alpha_half">#8009c7eb</color>
     <color name="timer_border">#000000</color>
     <color name="timer_border_pressed">#808080</color>
     <color name="timer_red">#FF0000</color>

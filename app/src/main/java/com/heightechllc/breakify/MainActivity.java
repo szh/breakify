@@ -3,14 +3,14 @@ package com.heightechllc.breakify;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.NumberPicker;
 import android.widget.TextView;
 
 import java.util.concurrent.TimeUnit;
@@ -31,13 +31,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private int timerState = STOPPED;
     private int workState = WORK;
 
+    SharedPreferences sharedPref;
+
     // UI Components
     CircleTimerView circleTimer;
     TextView stateLbl;
     TextView timeLbl;
     TextView startStopLbl;
     Button resetBtn;
-    LinearLayout timerSettingsLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,20 +55,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         timeLbl = (TextView) findViewById(R.id.time_lbl);
         startStopLbl = (TextView) findViewById(R.id.start_stop_lbl);
 
-        NumberPicker workNumPicker = (NumberPicker) findViewById(R.id.work_num_picker);
-        workNumPicker.setMinValue(1);
-        workNumPicker.setMaxValue(300);
-        workNumPicker.setValue(90);
-
-        NumberPicker breakNumPicker = (NumberPicker) findViewById(R.id.break_num_picker);
-        breakNumPicker.setMinValue(1);
-        breakNumPicker.setMaxValue(300);
-        breakNumPicker.setValue(10);
-
         resetBtn = (Button) findViewById(R.id.reset_btn);
         resetBtn.setOnClickListener(this);
 
-        timerSettingsLayout = (LinearLayout) findViewById(R.id.timer_settings_layout);
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
     }
 
     @Override
@@ -91,8 +82,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * @param duration The number of milliseconds to run the timer for
      */
     private void startTimer(long duration) {
-        // First hide the number pickers and show the "Reset" btn (TODO: Animate)
-        timerSettingsLayout.setVisibility(View.GONE);
+        // Show the "Reset" btn (TODO: Animate)
         resetBtn.setVisibility(View.VISIBLE);
 
         // Update timer display
@@ -156,14 +146,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
             // Timer already started before, so just get the remaining time
             duration = circleTimer.getPassedTime();
         } else {
-            // Get chosen duration in minutes
-            NumberPicker numberPicker;
-            if (workState == WORK)
-                numberPicker = (NumberPicker) findViewById(R.id.work_num_picker);
-            else
-                numberPicker = (NumberPicker) findViewById(R.id.break_num_picker);
+            // Get duration from preferences, in minutes
+            if (workState == WORK) {
+                duration = sharedPref.getInt(SettingsFragment.KEY_WORK_DURATION,
+                            getResources().getInteger(R.integer.default_work_duration));
+            }
+            else {
+                duration = sharedPref.getInt(SettingsFragment.KEY_BREAK_DURATION,
+                            getResources().getInteger(R.integer.default_break_duration));
+            }
 
-            duration = numberPicker.getValue() * 60000; // Multiply into milliseconds
+            duration *= 60000; // Multiply into milliseconds
         }
 
         startTimer(duration);
@@ -196,8 +189,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         timeLbl.clearAnimation();
         stateLbl.clearAnimation();
         timeLbl.setText("");
-
-        timerSettingsLayout.setVisibility(View.VISIBLE);
         resetBtn.setVisibility(View.GONE);
 
         // Back to initial state
@@ -247,8 +238,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
         builder.setNeutralButton(R.string.snooze, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                // Snooze the timer for 3 minutes (TODO: Make this a setting)
-                startTimer(180000);
+                // Get duration from preferences, in minutes
+                int snoozeDuration = sharedPref.getInt(SettingsFragment.KEY_SNOOZE_DURATION,
+                                        getResources().getInteger(R.integer.default_work_duration));
+                // Snooze the timer
+                startTimer(snoozeDuration * 60000); // Multiply into milliseconds
             }
         });
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {

@@ -6,4 +6,7 @@
     <dimen name="circletimer_stroke_width">4dp</dimen>
     <dimen name="circletimer_dot_size">12dp</dimen>
     <dimen name="circletimer_marker_size">16dp</dimen>
+
+    <dimen name="durations_display_layout_padding">8dp</dimen>
+    <dimen name="durations_display_margin">12dp</dimen>
 </resources>
