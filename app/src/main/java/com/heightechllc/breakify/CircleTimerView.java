@@ -141,7 +141,7 @@ public class CircleTimerView extends View implements View.OnTouchListener {
         borderColorPressed = resources.getColor(R.color.timer_border_pressed);
         redColor = resources.getColor(R.color.timer_red);
         redColorPressed = resources.getColor(R.color.timer_red_pressed);
-        backgroundColor = resources.getColor(R.color.clock_color);
+        backgroundColor = resources.getColor(R.color.timer_background);
         screenDensity = resources.getDisplayMetrics().density;
         redDotPaint.setAntiAlias(true);
         redDotPaint.setStyle(Paint.Style.FILL);
