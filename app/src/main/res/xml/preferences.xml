@@ -6,7 +6,6 @@
     <com.heightechllc.breakify.NumberPickerPreference
         android:key="pref_key_work_duration"
         android:title="@string/work_duration_title"
-        android:summary="@string/work_duration_summary"
         android:defaultValue="@integer/default_work_duration"
         app:maxValue="@integer/max_work_duration"
         app:minValue="1"
@@ -14,7 +13,6 @@
     <com.heightechllc.breakify.NumberPickerPreference
         android:key="pref_key_break_duration"
         android:title="@string/break_duration_title"
-        android:summary="@string/break_duration_summary"
         android:defaultValue="@integer/default_break_duration"
         app:maxValue="@integer/max_break_duration"
         app:minValue="1"
@@ -22,7 +20,6 @@
     <com.heightechllc.breakify.NumberPickerPreference
         android:key="pref_key_snooze_duration"
         android:title="@string/snooze_duration_title"
-        android:summary="@string/snooze_duration_summary"
         android:defaultValue="@integer/default_snooze_duration"
         app:maxValue="@integer/max_snooze_duration"
         app:minValue="1"
