@@ -99,7 +99,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * @param duration The number of milliseconds to run the timer for
      */
     private void startTimer(long duration) {
-        // Show the "Reset" btn (TODO: Animate)
+        // Show the "Reset" btn
         resetBtn.setVisibility(View.VISIBLE);
 
         // We don't need to call updateTimeLbl() now, since it's called in _countDownTimer.onTick(),
@@ -126,7 +126,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 timerState = STOPPED;
                 // Update the time display
                 updateTimeLbl(0);
-                // Hide the start / pause btn (TODO: Animate)
+                // Hide the start / pause btn
                 startStopLbl.setVisibility(View.INVISIBLE);
 
                 // Prompt to start break / resume work with dialog
@@ -205,7 +205,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         _countDownTimer.cancel();
         timerState = STOPPED;
 
-        // Reset the UI (TODO: Animate)
+        // Reset the UI
         timeLbl.clearAnimation();
         stateLbl.clearAnimation();
         timeLbl.setText("");
