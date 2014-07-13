@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:gravity="center">
 
     <NumberPicker android:id="@+id/num_picker"
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+    <!-- This TextView will be made visible by NumberPickerPreference.java if
+          the the preferences xml file specifies `minutes="true"` -->
+    <TextView
+        android:id="@+id/minutesLbl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/minutes"
+        android:textSize="18sp"
+        android:visibility="gone" />
 
 </LinearLayout>

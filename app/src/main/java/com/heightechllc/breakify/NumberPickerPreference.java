@@ -7,11 +7,13 @@ import android.preference.DialogPreference;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.NumberPicker;
+import android.widget.TextView;
 
 public class NumberPickerPreference extends DialogPreference {
 
     private NumberPicker picker;
     private int min, max;
+    private boolean minutes;
     private Integer initialVal;
 
     public NumberPickerPreference(Context context, AttributeSet attrs) {
@@ -22,6 +24,8 @@ public class NumberPickerPreference extends DialogPreference {
                                                             R.styleable.NumberPickerPreference);
         min = pickerStyles.getInt(R.styleable.NumberPickerPreference_minValue, 1);
         max = pickerStyles.getInt(R.styleable.NumberPickerPreference_maxValue, 300);
+        minutes = pickerStyles.getBoolean(R.styleable.NumberPickerPreference_minutes, false);
+
         pickerStyles.recycle();
 
         setDialogLayoutResource(R.layout.number_picker_preference);
@@ -42,6 +46,13 @@ public class NumberPickerPreference extends DialogPreference {
         picker.setMaxValue(max);
 
         if (initialVal != null) picker.setValue(initialVal);
+
+        // Show the "minutes" label if the number picker is for minutes
+        //  (defaults to `visibility="gone"`)
+        if (minutes) {
+            TextView minutesLbl = (TextView) view.findViewById(R.id.minutesLbl);
+            minutesLbl.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
