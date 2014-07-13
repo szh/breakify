@@ -3,7 +3,7 @@
     <!-- Base application theme. -->
     <!--<style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
         &lt;!&ndash; Customize your theme here. &ndash;&gt;
-        <item name="android:colorPrimaryDark">@color/clock_color</item>
+        <item name="android:colorPrimaryDark">@color/timer_background</item>
     </style>-->
 
 </resources>

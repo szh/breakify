@@ -96,7 +96,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     /**
      * Starts the work or break timer
-     *
      * @param duration The number of milliseconds to run the timer for
      */
     private void startTimer(long duration) {
@@ -181,7 +180,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     /**
-     * Pauses the break timer
+     * Pauses the timer
      */
     private void pauseTimer() {
         _countDownTimer.cancel();
@@ -199,6 +198,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         circleTimer.pauseIntervalAnimation();
     }
 
+    /**
+     * Resets the timer and reverts the UI to its initial state
+     */
     private void resetTimer() {
         _countDownTimer.cancel();
         timerState = STOPPED;
@@ -221,7 +223,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         circleTimer.invalidate();
     }
 
-
+    /**
+     * Updates the label that displays how much time is remaining
+     * @param millis The The number of milliseconds remaining
+     */
     private void updateTimeLbl(long millis) {
         // Stop blinking the time and state labels
         timeLbl.clearAnimation();
