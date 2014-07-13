@@ -22,6 +22,7 @@ public class CircleTimerView extends View implements View.OnTouchListener {
     private int borderColor;
     private int borderColorPressed;
     private int backgroundColor;
+    private int backgroundColorPressed;
     private long totalIntervalTime = 0;
     private long intervalStartTime = -1;
     private long markerTime = -1;
@@ -135,19 +136,19 @@ public class CircleTimerView extends View implements View.OnTouchListener {
         dotRadius = resources.getDimension(R.dimen.circletimer_dot_size) / 2f;
         markerStrokeSize = resources.getDimension(R.dimen.circletimer_marker_size);
         radiusOffset = dotRadius;
-        borderPaint.setAntiAlias(true);
-        borderPaint.setStyle(Paint.Style.STROKE);
+        screenDensity = resources.getDisplayMetrics().density;
         borderColor = resources.getColor(R.color.timer_border);
         borderColorPressed = resources.getColor(R.color.timer_border_pressed);
         redColor = resources.getColor(R.color.timer_red);
         redColorPressed = resources.getColor(R.color.timer_red_pressed);
         backgroundColor = resources.getColor(R.color.timer_background);
-        screenDensity = resources.getDisplayMetrics().density;
+        backgroundColorPressed = resources.getColor(R.color.timer_background_pressed);
+        borderPaint.setAntiAlias(true);
+        borderPaint.setStyle(Paint.Style.STROKE);
         redDotPaint.setAntiAlias(true);
         redDotPaint.setStyle(Paint.Style.FILL);
         backgroundPaint.setAntiAlias(true);
         backgroundPaint.setStyle(Paint.Style.FILL);
-        backgroundPaint.setColor(backgroundColor);
 
         setOnTouchListener(this);
     }
@@ -181,6 +182,7 @@ public class CircleTimerView extends View implements View.OnTouchListener {
         float radius = Math.min(xCenter, yCenter) - radiusOffset;
 
         // Draw the background
+        backgroundPaint.setColor(getBackgroundColor());
         canvas.drawCircle(xCenter, yCenter, radius, backgroundPaint);
 
         if (intervalStartTime == -1) {
@@ -266,6 +268,12 @@ public class CircleTimerView extends View implements View.OnTouchListener {
      */
     protected int getRedColor() {
         return pressed ? redColorPressed : redColor;
+    }
+    /**
+     * Get the correct background color for the current `pressed` state
+     */
+    protected int getBackgroundColor() {
+        return pressed ? backgroundColorPressed : backgroundColor;
     }
 
 }

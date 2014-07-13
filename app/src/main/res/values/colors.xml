@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="timer_background">#09C7EB</color>
+    <color name="timer_background_pressed">#08adcc</color>
     <color name="timer_background_alpha_half">#8009c7eb</color>
     <color name="timer_border">#000000</color>
     <color name="timer_border_pressed">#808080</color>
