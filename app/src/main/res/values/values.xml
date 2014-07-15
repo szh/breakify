@@ -6,4 +6,6 @@
     <integer name="max_work_duration">300</integer>
     <integer name="max_break_duration">300</integer>
     <integer name="max_snooze_duration">300</integer>
+
+    <bool name="default_analytics_enabled">true</bool>
 </resources>

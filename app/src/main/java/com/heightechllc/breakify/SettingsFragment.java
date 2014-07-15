@@ -20,6 +20,8 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     public static final String KEY_BREAK_DURATION = "pref_key_break_duration";
     public static final String KEY_SNOOZE_DURATION = "pref_key_snooze_duration";
 
+    public static final String KEY_ANALYTICS_ENABLED = "pref_key_analytics_enabled";
+
     /**
      * Use this factory method to create a new instance of this fragment.
      */
@@ -66,6 +68,16 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         {
             // Refresh the preference that changed
             updatePrefSummary(key);
+        }
+        else if (key.equals(KEY_ANALYTICS_ENABLED)) {
+            // Check if the user disabled analytics
+            boolean analyticsEnabled = sharedPreferences.getBoolean(key,
+                        getResources().getBoolean(R.bool.default_analytics_enabled));
+            if (MainActivity.mixpanel != null && !analyticsEnabled)
+                MainActivity.mixpanel = null;
+
+            // If the user enabled analytics, it will take effect in MainActivity.onCreate() on next
+            //  launch. But if the user disabled it, we should respect that and stop immediately.
         }
     }
 

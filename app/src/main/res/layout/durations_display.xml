@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/durations_display_margin"
-            android:text="@string/work_duration_title"
+            android:text="@string/pref_work_duration_title"
             android:textStyle="bold"
             android:layout_gravity="center"
             android:layout_column="0"
@@ -36,7 +36,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/break_duration_title"
+            android:text="@string/pref_break_duration_title"
             android:textStyle="bold"
             android:layout_gravity="center"
             android:layout_column="1"

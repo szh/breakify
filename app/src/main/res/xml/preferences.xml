@@ -5,24 +5,29 @@
 
     <com.heightechllc.breakify.NumberPickerPreference
         android:key="pref_key_work_duration"
-        android:title="@string/work_duration_title"
+        android:title="@string/pref_work_duration_title"
         android:defaultValue="@integer/default_work_duration"
         app:maxValue="@integer/max_work_duration"
         app:minValue="1"
         app:minutes="true" />
     <com.heightechllc.breakify.NumberPickerPreference
         android:key="pref_key_break_duration"
-        android:title="@string/break_duration_title"
+        android:title="@string/pref_break_duration_title"
         android:defaultValue="@integer/default_break_duration"
         app:maxValue="@integer/max_break_duration"
         app:minValue="1"
         app:minutes="true" />
     <com.heightechllc.breakify.NumberPickerPreference
         android:key="pref_key_snooze_duration"
-        android:title="@string/snooze_duration_title"
+        android:title="@string/pref_snooze_duration_title"
         android:defaultValue="@integer/default_snooze_duration"
         app:maxValue="@integer/max_snooze_duration"
         app:minValue="1"
         app:minutes="true" />
+
+    <CheckBoxPreference
+        android:key="pref_key_analytics_enabled"
+        android:title="@string/pref_analytics_enabled_title"
+        android:defaultValue="@bool/default_analytics_enabled" />
 
 </PreferenceScreen>
