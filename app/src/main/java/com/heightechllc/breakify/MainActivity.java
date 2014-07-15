@@ -1,11 +1,13 @@
 package com.heightechllc.breakify;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.animation.Animation;
@@ -18,10 +20,27 @@ import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.concurrent.TimeUnit;
-
+/**
+ *  The app's main activity. Controls the timer and main UI.
+ *
+ *  The function of keeping the exact time that has elapsed in the timer is taken care of by
+ *  the CircleTimerView, since it needs to refresh constantly anyway so it can animate. It also
+ *  takes care of updating the `timeLbl` TextView to display the current time remaining.
+ *
+ *  The function of alerting when the time is up is handled by the AlarmManager below.
+ *
+ *  For analytics, I'm trying out Mixpanel to see if they're any better than Google Analytics, et al.
+ *  They can be disabled in the SettingsActivity for those who don't like their usage to be tracked.
+ */
 public class MainActivity extends Activity implements View.OnClickListener {
     public static MixpanelAPI mixpanel;
+
+    public static final String EXTRA_ALARM_RING = "com.heightechllc.breakify.AlarmRing";
+    public static final int EXTRA_ALARM_RING_OK = 1;
+    public static final int EXTRA_ALARM_RING_SNOOZE = 2;
+    public static final int  EXTRA_ALARM_RING_CANCEL = 3;
+
+    private final int ALARM_MANAGER_REQUEST_CODE = 613;
 
     // Timer states
     public static final int RUNNING = 1;
@@ -34,11 +53,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     private String tag = "MainActivity";
 
-    private CountDownTimer _countDownTimer;
     private int timerState = STOPPED;
-    private int workState = WORK;
+    private static int workState = WORK;
 
     SharedPreferences sharedPref;
+    AlarmManager alarmManager;
 
     // UI Components
     CircleTimerView circleTimer;
@@ -55,26 +74,53 @@ public class MainActivity extends Activity implements View.OnClickListener {
         //
         // Set up components
         //
-        circleTimer = (CircleTimerView) findViewById(R.id.circle_timer);
-        circleTimer.setOnClickListener(this);
-
         stateLbl = (TextView) findViewById(R.id.state_lbl);
         timeLbl = (TextView) findViewById(R.id.time_lbl);
         startStopLbl = (TextView) findViewById(R.id.start_stop_lbl);
+
+        circleTimer = (CircleTimerView) findViewById(R.id.circle_timer);
+        circleTimer.setOnClickListener(this);
+        circleTimer.setTimeDisplay(timeLbl);
 
         resetBtn = (Button) findViewById(R.id.reset_btn);
         resetBtn.setOnClickListener(this);
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
         // Check if analytics are enabled in preferences
         if (sharedPref.getBoolean(SettingsFragment.KEY_ANALYTICS_ENABLED,
                 getResources().getBoolean(R.bool.default_analytics_enabled)))
             mixpanel = MixpanelAPI.getInstance(this, "d78a075fc861c288e24664a8905a6698");
+
+        // If the Activity is launched from RingingActivity, i.e. the timer finished and the user
+        //  chose an action, the extra "EXTRA_ALARM_RING" will store the action to take.
+        int action = getIntent().getIntExtra(EXTRA_ALARM_RING, -1);
+        if (action > 0) {
+            // We're done with the Extra now, so get rid of it, or it will stay even if
+            //  onCreate() is called again when the user re-opens the app
+            getIntent().removeExtra(EXTRA_ALARM_RING);
+            handleAlarmFinished(action);
+        } else {
+            // Check if an alarm is already running
+            if (isAlarmScheduled()) {
+                long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
+                timerState = PAUSED; // So startTimer() will treat it like we're resuming (b/c we are)
+                // Get the total time, so we can correctly show progress in the CircleTimerView
+                long totalTime = sharedPref.getLong("schedTotalTime", 0);
+                circleTimer.setTotalTime(totalTime);
+                // Calculate how much time is left
+                long duration = scheduledRingTime - SystemClock.elapsedRealtime();
+                // Update the time label and go go go!
+                circleTimer.updateTimeLbl(duration);
+                startTimer(duration);
+            }
+        }
     }
 
     @Override
     protected void onDestroy() {
+        // Send any unsent analytics events
         if (mixpanel != null) mixpanel.flush();
 
         super.onDestroy();
@@ -107,6 +153,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
                 break;
             case R.id.reset_btn:
+                cancelAlarmManager();
+
                 resetTimer();
 
                 // Analytics
@@ -125,57 +173,36 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * @param duration The number of milliseconds to run the timer for
      */
     private void startTimer(long duration) {
+        // Stop blinking the time and state labels
+        timeLbl.clearAnimation();
+        stateLbl.clearAnimation();
+
         // Show the "Reset" btn
         resetBtn.setVisibility(View.VISIBLE);
 
-        // We don't need to call updateTimeLbl() now, since it's called in _countDownTimer.onTick(),
-        //  which is called for the first time immediately after starting it.
-
-        /*
-         *  Create the count down timer, which functions are:
-         *  1) To notify when the time is up
-         *  2) To notify every second to update the time display label
-         *
-         *  The function of keeping the exact time that has elapsed is taken care of by the
-         *  CircleTimerView, since it needs to refresh constantly anyway so it can animate, and it
-         *  would be silly to also require the CountDownTimer to tick often to record it as well.
-         */
-        _countDownTimer = new CountDownTimer(duration, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                // Update the UI
-                updateTimeLbl(millisUntilFinished);
-            }
-
-            @Override
-            public void onFinish() {
-                timerState = STOPPED;
-                // Update the time display
-                updateTimeLbl(0);
-                // Hide the start / pause btn
-                startStopLbl.setVisibility(View.INVISIBLE);
-
-                // Prompt to start break / resume work with dialog
-                promptToSwitchWorkStates();
-            }
-        };
-
         // Update the start / stop label
-        startStopLbl.setVisibility(View.VISIBLE);
         startStopLbl.setText(R.string.stop);
+        startStopLbl.setVisibility(View.VISIBLE);
 
-        if (circleTimer.getIntervalTime() > 0 && timerState == PAUSED) {
+        if (timerState == PAUSED && circleTimer.getTotalTime() > 0) {
             // We're resuming from a paused state, so calculate how much time is remaining, based
-            //  on the total time set in the circleTimer (the intervalTime)
-            circleTimer.setPassedTime(circleTimer.getIntervalTime() - duration, false);
+            //  on the total time set in the circleTimer
+            circleTimer.setPassedTime(circleTimer.getTotalTime() - duration, false);
         } else {
-            circleTimer.setIntervalTime(duration);
+            circleTimer.setTotalTime(duration);
             circleTimer.setPassedTime(0, false);
+            circleTimer.updateTimeLbl(duration);
+            // Record the total time, so we can resume if the activity is destroyed
+            sharedPref.edit().putLong("schedTotalTime", duration).apply();
         }
+
+        // Schedule the alarm to go off
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, ALARM_MANAGER_REQUEST_CODE,
+                        new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_CANCEL_CURRENT);
+        scheduleAlarmManager(SystemClock.elapsedRealtime() + duration, pendingIntent);
 
         circleTimer.startIntervalAnimation();
 
-        _countDownTimer.start();
         timerState = RUNNING;
     }
 
@@ -187,7 +214,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         long duration;
         if (timerState == PAUSED) {
             // Timer already started before, so just get the remaining time
-            duration = circleTimer.getPassedTime();
+            duration = circleTimer.getRemainingTime();
 
             // Analytics
             if (mixpanel != null) {
@@ -228,19 +255,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * Pauses the timer
      */
     private void pauseTimer() {
-        _countDownTimer.cancel();
+        // TODO: Implement saving and restoring paused timers between app runs
+
+        cancelAlarmManager();
+        circleTimer.pauseIntervalAnimation();
+
         timerState = PAUSED;
 
         // Update the start / stop label
-        startStopLbl.setVisibility(View.VISIBLE);
         startStopLbl.setText(R.string.resume);
+        startStopLbl.setVisibility(View.VISIBLE);
 
         // Blink the time and state labels while paused
         Animation blinkAnim = AnimationUtils.loadAnimation(this, R.anim.blink);
         timeLbl.startAnimation(blinkAnim);
         stateLbl.startAnimation(blinkAnim);
-
-        circleTimer.pauseIntervalAnimation();
 
         // Analytics
         if (mixpanel != null) {
@@ -253,102 +282,24 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * Resets the timer and reverts the UI to its initial state
      */
     private void resetTimer() {
-        _countDownTimer.cancel();
         timerState = STOPPED;
 
         // Reset the UI
         timeLbl.clearAnimation();
         stateLbl.clearAnimation();
-        timeLbl.setText("");
         resetBtn.setVisibility(View.GONE);
+        timeLbl.setText("");
 
         // Back to initial state
         workState = WORK;
         stateLbl.setText(R.string.state_working);
 
         // Update the start / stop label
-        startStopLbl.setVisibility(View.VISIBLE);
         startStopLbl.setText(R.string.start);
+        startStopLbl.setVisibility(View.VISIBLE);
 
         circleTimer.stopIntervalAnimation();
         circleTimer.invalidate();
-    }
-
-    /**
-     * Updates the label that displays how much time is remaining
-     * @param millis The The number of milliseconds remaining
-     */
-    private void updateTimeLbl(long millis) {
-        // Stop blinking the time and state labels
-        timeLbl.clearAnimation();
-        stateLbl.clearAnimation();
-
-        // Get formatted time string
-        String timeStr = formatTime(millis);
-
-        // Update the clock
-        timeLbl.setText(timeStr);
-    }
-
-    /**
-     * Prompts the user to switch to the opposite work state (work or break)
-     */
-    private void promptToSwitchWorkStates() {
-        // Create the dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setCancelable(false);
-
-        if (workState == WORK)
-            builder.setMessage(R.string.start_break_prompt);
-        else
-            builder.setMessage(R.string.start_work_prompt);
-
-        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                switchWorkStates();
-            }
-        });
-        builder.setNeutralButton(R.string.snooze, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                // Get duration from preferences, in minutes
-                int snoozeDuration = sharedPref.getInt(SettingsFragment.KEY_SNOOZE_DURATION,
-                                        getResources().getInteger(R.integer.default_work_duration));
-                // Snooze the timer
-                startTimer(snoozeDuration * 60000); // Multiply into milliseconds
-
-                // Analytics
-                if (mixpanel != null) {
-                    JSONObject props = new JSONObject();
-                    try {
-                        props.put("Duration", snoozeDuration);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    String eventName = workState == WORK ?
-                                    "Work timer snoozed" : "Break timer snoozed";
-                    mixpanel.track(eventName, null);
-                }
-            }
-        });
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                // User chose to cancel (TODO: Ask user to confirm?)
-                resetTimer();
-                // Analytics
-                if (mixpanel != null) {
-                    // We want to have a separate event for when the user presses the "cancel" btn
-                    //  in this dialog, vs. when they press the "reset" btn
-                    String eventName = workState == WORK ?
-                                    "Work timer cancelled" : "Break timer cancelled";
-                    mixpanel.track(eventName, null);
-                }
-            }
-        });
-
-        builder.show();
     }
 
     /**
@@ -368,37 +319,99 @@ public class MainActivity extends Activity implements View.OnClickListener {
         startTimer();
     }
 
-    //
-    // HELPERS
-    //
+    public static int getWorkState() { return workState; }
 
     /**
-     * Creates a formatted string representing a time value, in the format Min:Sec, e.g. 06:13
-     *
-     * @param millis The number of milliseconds in the time
-     * @return The formatted string
+     * Schedules the alarm to trigger at the specified time
+     * @param time The time to go off at, using SystemClock.elapsedRealtime()
+     * @param pi The broadcast receiver PendingIntent to trigger
      */
-    private String formatTime(long millis) {
-        String timeStr = "";
-
-        // Start with hours, if there are any
-        long hours = TimeUnit.MILLISECONDS.toHours(millis);
-        if (hours > 0)
-        {
-            timeStr = hours + ":";
-            // Remove the milliseconds of the hours from `millis`, so they don't get counted as
-            //  minutes too (we do similar thing in calculating seconds, see below)
-            millis -= TimeUnit.HOURS.toMillis(hours);
+    private void scheduleAlarmManager(long time, PendingIntent pi)
+    {
+        if (Build.VERSION.SDK_INT >= 19) {
+            // API 19 needs setExact()
+            alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, time, pi);
+        }
+        else {
+            // APIs 1-18 use set()
+            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, time, pi);
         }
 
-        // Now calculate the minutes and seconds
-        // The '02' makes sure it's 2 digits
-        timeStr += String.format("%02d:%02d",
-                TimeUnit.MILLISECONDS.toMinutes(millis),
-                TimeUnit.MILLISECONDS.toSeconds(millis) -
-                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis))
-        );
+        // Record when the timer will ring
+        sharedPref.edit().putLong("schedRingTime", time).apply();
+    }
 
-        return timeStr;
+    /**
+     * Cancels the alarm scheduled using scheduleAlarmManager()
+     */
+    private void cancelAlarmManager() {
+        // Cancel the AlarmManager
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, ALARM_MANAGER_REQUEST_CODE,
+                    new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_CANCEL_CURRENT);
+        alarmManager.cancel(pendingIntent);
+
+        // Remove record of when the time will ring
+        sharedPref.edit().remove("schedRingTime").apply();
+    }
+
+    /**
+     * Checks whether there is an alarm scheduled using scheduleAlarmManager()
+     */
+    private boolean isAlarmScheduled() {
+        // We use FLAG_NO_CREATE to tell it not to create a new intent if one already exists.
+        // So, if it comes back as `null`, that means one does already exist
+        PendingIntent pi = PendingIntent.getBroadcast(this, ALARM_MANAGER_REQUEST_CODE,
+                new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_NO_CREATE);
+
+        return pi != null;
+    }
+
+    /**
+     * Called when the activity is launched from RingingActivity, meaning the alarm is finished
+     * @param action The action sent by RingingActivity - EXTRA_ALARM_RING_OK, etc.
+     */
+    private void handleAlarmFinished(int action) {
+        timerState = STOPPED;
+        // Clear the time display
+        timeLbl.setText("");
+        // Hide the start / pause label
+        startStopLbl.setVisibility(View.INVISIBLE);
+
+        switch (action) {
+            case EXTRA_ALARM_RING_OK:
+                switchWorkStates();
+                break;
+            case EXTRA_ALARM_RING_SNOOZE:
+                // Get duration from preferences, in minutes
+                int snoozeDuration = sharedPref.getInt(SettingsFragment.KEY_SNOOZE_DURATION,
+                        getResources().getInteger(R.integer.default_work_duration));
+                // Snooze the timer
+                startTimer(snoozeDuration * 60000); // Multiply into milliseconds
+
+                // Analytics
+                if (mixpanel != null) {
+                    JSONObject props = new JSONObject();
+                    try {
+                        props.put("Duration", snoozeDuration);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    String eventName = workState == WORK ?
+                            "Work timer snoozed" : "Break timer snoozed";
+                    mixpanel.track(eventName, null);
+                }
+                break;
+            case EXTRA_ALARM_RING_CANCEL:
+                // User chose to cancel
+                resetTimer();
+                // Analytics
+                if (mixpanel != null) {
+                    // We want to have a separate event for when the user presses the "cancel" btn
+                    //  in this dialog, vs. when they press the "reset" btn
+                    String eventName = workState == WORK ?
+                            "Work timer cancelled" : "Break timer cancelled";
+                    mixpanel.track(eventName, null);
+                }
+        }
     }
 }

@@ -9,6 +9,9 @@ import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Round timer view.
@@ -46,6 +49,16 @@ public class CircleTimerView extends View implements View.OnTouchListener {
     private boolean pressed;
 
     /**
+     * The TextView to display the remaining time on
+     */
+    private TextView timeLbl;
+
+    /**
+     * The last seconds value that the timeLbl was updated with
+     */
+    private int lastUpdatedSecond = -1;
+
+    /**
      * The listener to notify when the user clicks the View
      */
     private OnClickListener clickListener;
@@ -60,12 +73,12 @@ public class CircleTimerView extends View implements View.OnTouchListener {
         init(context);
     }
 
-    public void setIntervalTime(long t) {
+    public void setTotalTime(long t) {
         totalIntervalTime = t;
         postInvalidate();
     }
 
-    public long getIntervalTime() {
+    public long getTotalTime() {
         return totalIntervalTime;
     }
 
@@ -123,8 +136,8 @@ public class CircleTimerView extends View implements View.OnTouchListener {
         postInvalidate();
     }
 
-    public long getPassedTime() {
-        // Total time - remaining time
+    public long getRemainingTime() {
+        // Total time - past time
         return totalIntervalTime - currentIntervalTime;
     }
 
@@ -174,7 +187,7 @@ public class CircleTimerView extends View implements View.OnTouchListener {
     }
 
     @Override
-    public void draw(Canvas canvas) {
+    public void onDraw(Canvas canvas) {
         int xCenter = getWidth() / 2 + 1;
         int yCenter = getHeight() / 2;
 
@@ -193,6 +206,8 @@ public class CircleTimerView extends View implements View.OnTouchListener {
         } else {
             if (animate) {
                 currentIntervalTime = SystemClock.elapsedRealtime() - intervalStartTime + accumulatedTime;
+                // Update the TextView that displays the time remaining
+                updateTimeLbl(totalIntervalTime - currentIntervalTime);
             }
             //draw a combination of red and white arcs to create a circle
             arcRect.top = yCenter - radius;
@@ -230,6 +245,10 @@ public class CircleTimerView extends View implements View.OnTouchListener {
         }
     }
 
+    public void setTimeDisplay(TextView lbl) {
+        timeLbl = lbl;
+    }
+
     @Override
     public void setOnClickListener(OnClickListener l) {
         clickListener = l;
@@ -253,6 +272,24 @@ public class CircleTimerView extends View implements View.OnTouchListener {
                 yCenter + (float) (radius * Math.sin(dotRadians)), dotRadius, redDotPaint);
     }
 
+    /**
+     * Updates the label that displays how much time is remaining
+     * @param millis The The number of milliseconds remaining
+     */
+    public void updateTimeLbl(long millis) {
+        if (timeLbl == null) return;
+
+        // Check if we already updated the TextView for this second
+        int seconds = (int) millis / 1000;
+        if (seconds == lastUpdatedSecond) return;
+
+        // Get formatted time string
+        String timeStr = formatTime(seconds);
+
+        // Update the clock display
+        timeLbl.setText(timeStr);
+    }
+
     //
     // HELPERS
     //
@@ -274,6 +311,36 @@ public class CircleTimerView extends View implements View.OnTouchListener {
      */
     protected int getBackgroundColor() {
         return pressed ? backgroundColorPressed : backgroundColor;
+    }
+
+    /**
+     * Creates a formatted string representing a time value, in the format Min:Sec, e.g. 06:13
+     *
+     * @param seconds The number of seconds in the time
+     * @return The formatted string
+     */
+    private String formatTime(long seconds) {
+        String timeStr = "";
+
+        // Start with hours, if there are any
+        long hours = TimeUnit.SECONDS.toHours(seconds);
+        if (hours > 0)
+        {
+            timeStr = hours + ":";
+            // Remove the seconds of the hours from `seconds`, so they don't get counted as
+            //  minutes too (we do similar thing in calculating seconds, see below)
+            seconds -= TimeUnit.HOURS.toSeconds(hours);
+        }
+
+        // Now calculate the minutes and seconds
+        // The '02' makes sure it's 2 digits
+        timeStr += String.format("%02d:%02d",
+                TimeUnit.SECONDS.toMinutes(seconds),
+                TimeUnit.SECONDS.toSeconds(seconds) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.SECONDS.toMinutes(seconds))
+        );
+
+        return timeStr;
     }
 
 }
