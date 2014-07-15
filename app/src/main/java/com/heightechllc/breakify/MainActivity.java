@@ -24,13 +24,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public static MixpanelAPI mixpanel;
 
     // Timer states
-    public static int RUNNING = 1;
-    public static int PAUSED = 2;
-    public static int STOPPED = 0;
+    public static final int RUNNING = 1;
+    public static final int PAUSED = 2;
+    public static final int STOPPED = 0;
 
     // Work states
-    public static int WORK = 1;
-    public static int BREAK = 2;
+    public static final int WORK = 1;
+    public static final int BREAK = 2;
 
     private String tag = "MainActivity";
 
