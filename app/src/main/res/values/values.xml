@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Settings -->
     <integer name="default_work_duration">90</integer>
     <integer name="default_break_duration">10</integer>
     <integer name="default_snooze_duration">3</integer>
@@ -8,4 +9,5 @@
     <integer name="max_snooze_duration">300</integer>
 
     <bool name="default_analytics_enabled">true</bool>
+
 </resources>

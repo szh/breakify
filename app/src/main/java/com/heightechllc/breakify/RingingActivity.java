@@ -61,5 +61,7 @@ public class RingingActivity extends Activity implements View.OnClickListener {
         intent.putExtra(MainActivity.EXTRA_ALARM_RING, action);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
+        // Use flip animation
+        overridePendingTransition(R.anim.card_flip_in, R.anim.card_flip_out);
     }
 }
