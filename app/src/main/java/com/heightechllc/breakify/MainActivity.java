@@ -127,24 +127,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        // Resume the timer's animation
-        if (timerState == RUNNING)
-            circleTimer.startIntervalAnimation();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        // Pause the timer's animation
-        if (timerState == RUNNING)
-            circleTimer.pauseIntervalAnimation();
-    }
-
-    @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.circle_timer:
