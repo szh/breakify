@@ -3,6 +3,7 @@ package com.heightechllc.breakify;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -40,6 +41,23 @@ public class RingingActivity extends Activity implements View.OnClickListener {
     }
 
     @Override
+    public void onUserInteraction() {
+        super.onUserInteraction();
+
+        // User did some kind of interaction to demonstrate that they noticed the alarm,
+        //  so we can stop bothering them now (we want to be as gentle as possible while
+        //  still ensuring the user is aware that the time is up)
+        AlarmRinger.stop(this);
+    }
+
+    @Override
+    public void onBackPressed() {
+        // Override the device's back button to function like the "cancel" button
+        Button cancelBtn = (Button) findViewById(R.id.cancelBtn);
+        cancelBtn.performClick();
+    }
+
+    @Override
     public void onClick(View view) {
         int action;
         switch (view.getId()) {
@@ -56,6 +74,8 @@ public class RingingActivity extends Activity implements View.OnClickListener {
             default: return;
         }
 
+        // Alarm is stopped in onUserInteraction()
+
         // Launch MainActivity and tell it what the user selected
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra(MainActivity.EXTRA_ALARM_RING, action);
@@ -63,5 +83,25 @@ public class RingingActivity extends Activity implements View.OnClickListener {
         startActivity(intent);
         // Use flip animation
         overridePendingTransition(R.anim.card_flip_in, R.anim.card_flip_out);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        // Stop the alarm immediately if the user presses any of the hardware keys.
+        // Main use case is if the user forgets to turn off alarm, and it rings in a meeting. User
+        //  should be able to mute instantly by pressing volume (or other) keys.
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_MUTE:
+            case KeyEvent.KEYCODE_CAMERA:
+            case KeyEvent.KEYCODE_FOCUS:
+            case KeyEvent.KEYCODE_POWER:
+                AlarmRinger.stop(this);
+                return true;
+
+            default:
+                return super.onKeyUp(keyCode, event);
+        }
     }
 }

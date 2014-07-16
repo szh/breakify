@@ -3,6 +3,7 @@ package com.heightechllc.breakify;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.telephony.TelephonyManager;
 
 public class AlarmReceiver extends BroadcastReceiver {
     public AlarmReceiver() {
@@ -10,10 +11,14 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        //TODO: Ring
+        // TODO: Show notification
 
-        //TODO: Vibrate
-        //Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        // Check if a call is active or ringing
+        TelephonyManager telephonyManager = (TelephonyManager)
+                context.getSystemService(Context.TELEPHONY_SERVICE);
+        boolean inCall = (telephonyManager.getCallState() != TelephonyManager.CALL_STATE_IDLE);
+        // Start ringing and / or vibrating
+        AlarmRinger.start(context, inCall);
 
         // Open the RingingActivity
         Intent ringingIntent = new Intent(context, RingingActivity.class);

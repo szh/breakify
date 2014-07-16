@@ -15,8 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Round timer view.
- * Based on CircleTimerView from the Android clock app (deskclock)
- * Created by szh on 6/30/14.
+ * Based on CircleTimerView from the Android clock app (deskclock), which is licensed under the
+ *  Apache License, Version 2.0
  */
 public class CircleTimerView extends View implements View.OnTouchListener {
 
@@ -188,6 +188,7 @@ public class CircleTimerView extends View implements View.OnTouchListener {
 
     @Override
     public void onDraw(Canvas canvas) {
+
         int xCenter = getWidth() / 2 + 1;
         int yCenter = getHeight() / 2;
 
@@ -283,8 +284,16 @@ public class CircleTimerView extends View implements View.OnTouchListener {
         int seconds = (int) millis / 1000;
         if (seconds == lastUpdatedSecond) return;
 
-        // Get formatted time string
-        String timeStr = formatTime(seconds);
+        // Get formatted time string with seconds + 1, since we want it to say 10:00 (or whatever),
+        //  not 09:59 for the first second. Why? Because when humans count down from 10, we start
+        //  with 10, not 9. Same way for the last second, we want it to say 00:01, not 00:00.
+        //  There is technically something like 00:00.45, etc., but it would make that into 00:00,
+        //  which isn't the way people talk - we say "you have one second left" until the time is
+        //  completely up, and only then do we say "zero seconds left". This is also the way most
+        //  countdown timers I tried work. Alternatively, we can consider rounding, i.e., 0.0-0.49
+        //  would be 0 and 0.5-0.9 would be 1, but I'm not sure that's a great model either.
+        // If anyone thinks otherwise, please let me know!
+        String timeStr = formatTime(++seconds);
 
         // Update the clock display
         timeLbl.setText(timeStr);
