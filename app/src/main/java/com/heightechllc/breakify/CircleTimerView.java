@@ -148,7 +148,7 @@ public class CircleTimerView extends View implements View.OnTouchListener {
         strokeSize = resources.getDimension(R.dimen.circletimer_stroke_width);
         dotRadius = resources.getDimension(R.dimen.circletimer_dot_size) / 2f;
         markerStrokeSize = resources.getDimension(R.dimen.circletimer_marker_size);
-        radiusOffset = dotRadius;
+        radiusOffset = Math.max(dotRadius, markerStrokeSize / 2f);
         screenDensity = resources.getDisplayMetrics().density;
         borderColor = resources.getColor(R.color.timer_border);
         borderColorPressed = resources.getColor(R.color.timer_border_pressed);
