@@ -103,18 +103,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
             handleAlarmFinished(action);
         } else {
             // Check if an alarm is already running
-            if (isAlarmScheduled()) {
-                long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
-                timerState = PAUSED; // So startTimer() will treat it like we're resuming (b/c we are)
-                // Get the total time, so we can correctly show progress in the CircleTimerView
-                long totalTime = sharedPref.getLong("schedTotalTime", 0);
-                circleTimer.setTotalTime(totalTime);
-                // Calculate how much time is left
-                long duration = scheduledRingTime - SystemClock.elapsedRealtime();
-                // Update the time label and go go go!
-                circleTimer.updateTimeLbl(duration);
-                startTimer(duration);
-            }
+            long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
+            if (scheduledRingTime == 0)
+                return; // Means no alarm is scheduled
+
+            // Get the total duration for the scheduled timer, so we can accurately show progress
+            long totalTime = sharedPref.getLong("schedTotalTime", 0);
+            if (totalTime == 0) return; // Defensive programming
+            circleTimer.setTotalTime(totalTime);
+            // Calculate how much time is left
+            long duration = scheduledRingTime - SystemClock.elapsedRealtime();
+            // Update the time label and go go go!
+            circleTimer.updateTimeLbl(duration);
+            // Cause startTimer() to treat it like we're resuming (b/c we are)
+            timerState = PAUSED;
+            startTimer(duration);
         }
     }
 
@@ -135,7 +138,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
                 break;
             case R.id.reset_btn:
-                cancelAlarmManager();
+                cancelScheduledAlarm();
 
                 resetTimer();
 
@@ -174,14 +177,24 @@ public class MainActivity extends Activity implements View.OnClickListener {
             circleTimer.setTotalTime(duration);
             circleTimer.setPassedTime(0, false);
             circleTimer.updateTimeLbl(duration);
-            // Record the total time, so we can resume if the activity is destroyed
+            // Record the total duration, so we can resume if the activity is destroyed
             sharedPref.edit().putLong("schedTotalTime", duration).apply();
         }
 
         // Schedule the alarm to go off
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, ALARM_MANAGER_REQUEST_CODE,
+        PendingIntent pi = PendingIntent.getBroadcast(this, ALARM_MANAGER_REQUEST_CODE,
                         new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_CANCEL_CURRENT);
-        scheduleAlarmManager(SystemClock.elapsedRealtime() + duration, pendingIntent);
+        long ringTime = SystemClock.elapsedRealtime() + duration;
+        if (Build.VERSION.SDK_INT >= 19) {
+            // API 19 needs setExact()
+            alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, ringTime, pi);
+        }
+        else {
+            // APIs 1-18 use set()
+            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, ringTime, pi);
+        }
+        // Record when the timer will ring
+        sharedPref.edit().putLong("schedRingTime", ringTime).apply();
 
         circleTimer.startIntervalAnimation();
 
@@ -239,7 +252,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void pauseTimer() {
         // TODO: Implement saving and restoring paused timers between app runs
 
-        cancelAlarmManager();
+        cancelScheduledAlarm();
         circleTimer.pauseIntervalAnimation();
 
         timerState = PAUSED;
@@ -282,6 +295,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         circleTimer.stopIntervalAnimation();
         circleTimer.invalidate();
+
+        // Remove record of total timer duration
+        sharedPref.edit().remove("schedTotalTime").apply();
     }
 
     /**
@@ -304,29 +320,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public static int getWorkState() { return workState; }
 
     /**
-     * Schedules the alarm to trigger at the specified time
-     * @param time The time to go off at, using SystemClock.elapsedRealtime()
-     * @param pi The broadcast receiver PendingIntent to trigger
+     * Cancels the alarm scheduled by startTimer()
      */
-    private void scheduleAlarmManager(long time, PendingIntent pi)
-    {
-        if (Build.VERSION.SDK_INT >= 19) {
-            // API 19 needs setExact()
-            alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, time, pi);
-        }
-        else {
-            // APIs 1-18 use set()
-            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, time, pi);
-        }
-
-        // Record when the timer will ring
-        sharedPref.edit().putLong("schedRingTime", time).apply();
-    }
-
-    /**
-     * Cancels the alarm scheduled using scheduleAlarmManager()
-     */
-    private void cancelAlarmManager() {
+    private void cancelScheduledAlarm() {
         // Cancel the AlarmManager
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, ALARM_MANAGER_REQUEST_CODE,
                     new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_CANCEL_CURRENT);
@@ -334,18 +330,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         // Remove record of when the time will ring
         sharedPref.edit().remove("schedRingTime").apply();
-    }
-
-    /**
-     * Checks whether there is an alarm scheduled using scheduleAlarmManager()
-     */
-    private boolean isAlarmScheduled() {
-        // We use FLAG_NO_CREATE to tell it not to create a new intent if one already exists.
-        // So, if it comes back as `null`, that means one does already exist
-        PendingIntent pi = PendingIntent.getBroadcast(this, ALARM_MANAGER_REQUEST_CODE,
-                new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_NO_CREATE);
-
-        return pi != null;
     }
 
     /**
