@@ -14,7 +14,7 @@ import android.widget.TextView;
 
 
 /**
- * Fragment for displaying the current settings for the work, break and snooze durations
+ * Fragment for displaying the current settings for the work and break durations
  */
 public class DurationsDisplayFragment extends Fragment implements View.OnClickListener {
 
@@ -64,7 +64,7 @@ public class DurationsDisplayFragment extends Fragment implements View.OnClickLi
         TextView breakDisplay = (TextView) v.findViewById(R.id.break_duration_display);
 
         // Get the current setting for each value
-        int workNum, breakNum, snoozeNum;
+        int workNum, breakNum;
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         workNum = prefs.getInt(SettingsFragment.KEY_WORK_DURATION,
