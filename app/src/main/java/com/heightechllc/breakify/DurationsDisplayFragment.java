@@ -16,6 +16,9 @@ import android.widget.TextView;
  */
 public class DurationsDisplayFragment extends Fragment implements View.OnClickListener {
 
+    private int workMins;
+    private int breakMins;
+
     private View v;
 
     @Override
@@ -70,7 +73,9 @@ public class DurationsDisplayFragment extends Fragment implements View.OnClickLi
 
         // Construct the text for each value: the int + 'minutes' - e.g., "90 minutes"
         String mins = getResources().getString(R.string.minutes);
-        workDisplay.setText(workNum + " " + mins);
-        breakDisplay.setText(breakNum + " " + mins);
+        if (workNum != this.workMins)
+            workDisplay.setText(workNum + " " + mins);
+        if (breakNum != this.breakMins)
+            breakDisplay.setText(breakNum + " " + mins);
     }
 }
