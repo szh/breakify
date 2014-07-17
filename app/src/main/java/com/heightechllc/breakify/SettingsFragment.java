@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
-import android.provider.Settings;
 
 
 /**
@@ -100,7 +99,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
      */
     private void updateDurationPrefSummary(String key) {
         // Get the preference's value, and add " minutes" to make it human-readable
-        String summary = getPreferenceScreen().getSharedPreferences().getInt(key, 1)
+        String summary = getPreferenceScreen().getSharedPreferences().getInt(key, 0)
                                     + " " + getString(R.string.minutes);
         // Set the preference's summary
         Preference pref = findPreference(key);
@@ -112,8 +111,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
      */
     private void updateRingtonePrefSummary() {
         // Get the URI of the selected ringtone
-        String selected = getPreferenceScreen().getSharedPreferences().getString(KEY_RINGTONE,
-                Settings.System.DEFAULT_ALARM_ALERT_URI.toString());
+        String selected = getPreferenceScreen().getSharedPreferences().getString(KEY_RINGTONE, "");
 
         // Get the title of the selected ringtone
         String title;

@@ -69,6 +69,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Set up the default values for the preferences
+        PreferenceManager.setDefaultValues(getApplicationContext(), R.xml.preferences, true);
+
         setContentView(R.layout.activity_main);
 
         //
@@ -89,8 +93,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
         // Check if analytics are enabled in preferences
-        if (sharedPref.getBoolean(SettingsFragment.KEY_ANALYTICS_ENABLED,
-                getResources().getBoolean(R.bool.default_analytics_enabled)))
+        if (sharedPref.getBoolean(SettingsFragment.KEY_ANALYTICS_ENABLED, false))
             mixpanel = MixpanelAPI.getInstance(this, "d78a075fc861c288e24664a8905a6698");
 
         // If the Activity is launched from RingingActivity, i.e. the timer finished and the user
@@ -220,12 +223,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         } else {
             // Get duration from preferences, in minutes
             if (workState == WORK) {
-                duration = sharedPref.getInt(SettingsFragment.KEY_WORK_DURATION,
-                            getResources().getInteger(R.integer.default_work_duration));
+                duration = sharedPref.getInt(SettingsFragment.KEY_WORK_DURATION, 0);
             }
             else {
-                duration = sharedPref.getInt(SettingsFragment.KEY_BREAK_DURATION,
-                            getResources().getInteger(R.integer.default_break_duration));
+                duration = sharedPref.getInt(SettingsFragment.KEY_BREAK_DURATION, 0);
             }
 
             // Analytics
@@ -349,8 +350,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 break;
             case EXTRA_ALARM_RING_SNOOZE:
                 // Get duration from preferences, in minutes
-                int snoozeDuration = sharedPref.getInt(SettingsFragment.KEY_SNOOZE_DURATION,
-                        getResources().getInteger(R.integer.default_work_duration));
+                int snoozeDuration = sharedPref.getInt(SettingsFragment.KEY_SNOOZE_DURATION, 0);
                 // Snooze the timer
                 startTimer(snoozeDuration * 60000); // Multiply into milliseconds
 

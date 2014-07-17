@@ -89,8 +89,7 @@ public class AlarmRinger {
         }
 
         // Check if vibration is enabled
-        boolean vibrate = sharedPrefs.getBoolean(SettingsFragment.KEY_VIBRATE,
-                            context.getResources().getBoolean(R.bool.default_vibrate));
+        boolean vibrate = sharedPrefs.getBoolean(SettingsFragment.KEY_VIBRATE, false);
 
         if (vibrate)
             getVibrator(context).vibrate(new long[]{500, 500}, 0);

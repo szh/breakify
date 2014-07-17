@@ -16,6 +16,8 @@ public class NumberPickerPreference extends DialogPreference {
     private boolean minutes;
     private Integer initialVal;
 
+    private static final int FALLBACK_DEFAULT = 1;
+
     public NumberPickerPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -71,25 +73,17 @@ public class NumberPickerPreference extends DialogPreference {
     protected void onSetInitialValue(boolean restorePersistedValue, Object defaultValue) {
         super.onSetInitialValue(restorePersistedValue, defaultValue);
 
-        if (!restorePersistedValue)
-        {
-            // Attempt to parse defaultValue as an int
+        if (restorePersistedValue) {
+            initialVal = getPersistedInt(FALLBACK_DEFAULT);
+        } else {
             initialVal = (Integer) defaultValue;
-            return;
+            persistInt(initialVal);
         }
-
-        int def;
-        if (defaultValue instanceof Number)
-            def = (Integer) defaultValue;
-        else // Try to parse the value to an Integer. If it's null, just use `1`
-            def = (defaultValue != null) ? Integer.parseInt(defaultValue.toString()) : 1;
-
-        initialVal = getPersistedInt(def);
     }
 
     @Override
     protected Object onGetDefaultValue(TypedArray a, int index) {
         // We default to 1 (see end of `onSetInitialValue()`)
-        return a.getInt(index, 1);
+        return a.getInt(index, FALLBACK_DEFAULT);
     }
 }
