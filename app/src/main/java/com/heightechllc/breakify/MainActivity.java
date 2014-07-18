@@ -36,9 +36,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public static MixpanelAPI mixpanel;
 
     public static final String EXTRA_ALARM_RING = "com.heightechllc.breakify.AlarmRing";
-    public static final int EXTRA_ALARM_RING_OK = 1;
-    public static final int EXTRA_ALARM_RING_SNOOZE = 2;
-    public static final int  EXTRA_ALARM_RING_CANCEL = 3;
 
     private final int ALARM_MANAGER_REQUEST_CODE = 613;
 
@@ -96,14 +93,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (sharedPref.getBoolean(SettingsFragment.KEY_ANALYTICS_ENABLED, false))
             mixpanel = MixpanelAPI.getInstance(this, "d78a075fc861c288e24664a8905a6698");
 
-        // If the Activity is launched from RingingActivity, i.e. the timer finished and the user
-        //  chose an action, the extra "EXTRA_ALARM_RING" will store the action to take.
-        int action = getIntent().getIntExtra(EXTRA_ALARM_RING, -1);
-        if (action > 0) {
-            // We're done with the Extra now, so get rid of it, or it will stay even if
-            //  onCreate() is called again when the user re-opens the app
-            getIntent().removeExtra(EXTRA_ALARM_RING);
-            handleAlarmFinished(action);
+        // If the Activity is launched from AlarmReceiver, meaning the timer finished and we
+        //  need to ring the alarm, `EXTRA_ALARM_RING` will be `true`
+        boolean ring = getIntent().getBooleanExtra(EXTRA_ALARM_RING, false);
+        if (ring) {
+            // Time's up! Open the RingingActivity
+            Intent ringingIntent = new Intent(this, RingingActivity.class);
+            ringingIntent.setFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+            startActivityForResult(ringingIntent, RingingActivity.REQUEST_ALARM_RING);
         } else {
             // Check if an alarm is already running
             long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
@@ -157,6 +154,54 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     /**
+     * Called when we get a result from RingingActivity, meaning the user chose an action
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode != RingingActivity.REQUEST_ALARM_RING)
+            return; // We didn't request it and we don't know what to do with the result
+
+        switch (resultCode) {
+            case RingingActivity.RESULT_ALARM_RING_OK:
+                switchWorkStates();
+                break;
+            case RingingActivity.RESULT_ALARM_RING_SNOOZE:
+                // Get duration from preferences, in minutes
+                int snoozeDuration = sharedPref.getInt(SettingsFragment.KEY_SNOOZE_DURATION, 0);
+                // Snooze the timer
+                startTimer(snoozeDuration * 60000); // Multiply into milliseconds
+
+                // Analytics
+                if (mixpanel != null) {
+                    JSONObject props = new JSONObject();
+                    try {
+                        props.put("Duration", snoozeDuration);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    String eventName = workState == WORK ?
+                            "Work timer snoozed" : "Break timer snoozed";
+                    mixpanel.track(eventName, null);
+                }
+                break;
+            case RingingActivity.RESULT_ALARM_RING_CANCEL:
+                // User chose to cancel
+                resetTimer();
+                // Analytics
+                if (mixpanel != null) {
+                    // We want to have a separate event for when the user presses the "cancel" btn
+                    //  in RingingActivity, vs. when they press the "reset" btn
+                    String eventName = workState == WORK ?
+                            "Work timer cancelled" : "Break timer cancelled";
+                    mixpanel.track(eventName, null);
+                }
+        }
+    }
+
+
+    /**
      * Starts the work or break timer
      * @param duration The number of milliseconds to run the timer for
      */
@@ -184,9 +229,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
             sharedPref.edit().putLong("schedTotalTime", duration).apply();
         }
 
+        circleTimer.startIntervalAnimation();
+
+        timerState = RUNNING;
+
         // Schedule the alarm to go off
         PendingIntent pi = PendingIntent.getBroadcast(this, ALARM_MANAGER_REQUEST_CODE,
-                        new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_CANCEL_CURRENT);
         long ringTime = SystemClock.elapsedRealtime() + duration;
         if (Build.VERSION.SDK_INT >= 19) {
             // API 19 needs setExact()
@@ -198,10 +247,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
         // Record when the timer will ring
         sharedPref.edit().putLong("schedRingTime", ringTime).apply();
-
-        circleTimer.startIntervalAnimation();
-
-        timerState = RUNNING;
     }
 
     /**
@@ -251,7 +296,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * Pauses the timer
      */
     private void pauseTimer() {
-        // TODO: Implement saving and restoring paused timers between app runs
+        // TODO: Implement saving and restoring paused timers between app runs and device boots
 
         cancelScheduledAlarm();
         circleTimer.pauseIntervalAnimation();
@@ -333,51 +378,4 @@ public class MainActivity extends Activity implements View.OnClickListener {
         sharedPref.edit().remove("schedRingTime").apply();
     }
 
-    /**
-     * Called when the activity is launched from RingingActivity, meaning the alarm is finished
-     * @param action The action sent by RingingActivity - EXTRA_ALARM_RING_OK, etc.
-     */
-    private void handleAlarmFinished(int action) {
-        timerState = STOPPED;
-        // Clear the time display
-        timeLbl.setText("");
-        // Hide the start / pause label
-        startStopLbl.setVisibility(View.INVISIBLE);
-
-        switch (action) {
-            case EXTRA_ALARM_RING_OK:
-                switchWorkStates();
-                break;
-            case EXTRA_ALARM_RING_SNOOZE:
-                // Get duration from preferences, in minutes
-                int snoozeDuration = sharedPref.getInt(SettingsFragment.KEY_SNOOZE_DURATION, 0);
-                // Snooze the timer
-                startTimer(snoozeDuration * 60000); // Multiply into milliseconds
-
-                // Analytics
-                if (mixpanel != null) {
-                    JSONObject props = new JSONObject();
-                    try {
-                        props.put("Duration", snoozeDuration);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    String eventName = workState == WORK ?
-                            "Work timer snoozed" : "Break timer snoozed";
-                    mixpanel.track(eventName, null);
-                }
-                break;
-            case EXTRA_ALARM_RING_CANCEL:
-                // User chose to cancel
-                resetTimer();
-                // Analytics
-                if (mixpanel != null) {
-                    // We want to have a separate event for when the user presses the "cancel" btn
-                    //  in this dialog, vs. when they press the "reset" btn
-                    String eventName = workState == WORK ?
-                            "Work timer cancelled" : "Break timer cancelled";
-                    mixpanel.track(eventName, null);
-                }
-        }
-    }
 }

@@ -1,15 +1,23 @@
 package com.heightechllc.breakify;
 
 import android.app.Activity;
-import android.content.Intent;
+import android.content.Context;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
+/**
+ * Activity displayed when the time is up. Plays ringtone and vibrates using AlarmRinger
+ */
 public class RingingActivity extends Activity implements View.OnClickListener {
+    public static int REQUEST_ALARM_RING = 0;
+    public static final int RESULT_ALARM_RING_OK = RESULT_OK;
+    public static final int RESULT_ALARM_RING_CANCEL = RESULT_CANCELED;
+    public static final int RESULT_ALARM_RING_SNOOZE = RESULT_FIRST_USER;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +46,17 @@ public class RingingActivity extends Activity implements View.OnClickListener {
         okBtn.setOnClickListener(this);
         snoozeBtn.setOnClickListener(this);
         cancelBtn.setOnClickListener(this);
+
+        // TODO: Show notification
+
+        // Check if a call is active or ringing
+        TelephonyManager telephonyManager = (TelephonyManager)
+                getSystemService(Context.TELEPHONY_SERVICE);
+        boolean inCall = (telephonyManager.getCallState() != TelephonyManager.CALL_STATE_IDLE);
+        // Start ringing and / or vibrating (we do this here instead of in the broadcast receiver
+        //  since we don't want the device to start ringing and vibrating before the activity shows
+        //  up (in case there's a delay in opening the activity, e.g. on a slow device)
+        AlarmRinger.start(this, inCall);
     }
 
     @Override
@@ -59,28 +78,26 @@ public class RingingActivity extends Activity implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-        int action;
+        int result;
         switch (view.getId()) {
             case R.id.okBtn:
-                action = MainActivity.EXTRA_ALARM_RING_OK;
+                result = RESULT_ALARM_RING_OK;
                 break;
             case R.id.snoozeBtn:
-                action = MainActivity.EXTRA_ALARM_RING_SNOOZE;
+                result = RESULT_ALARM_RING_SNOOZE;
                 break;
             case R.id.cancelBtn:
                 // TODO: Ask user to confirm?
-                action = MainActivity.EXTRA_ALARM_RING_CANCEL;
+                result = RESULT_ALARM_RING_CANCEL;
                 break;
             default: return;
         }
 
-        // Alarm is stopped in onUserInteraction()
+        // No need to stop alarm here, b/c it's stopped by onUserInteraction()
 
-        // Launch MainActivity and tell it what the user selected
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra(MainActivity.EXTRA_ALARM_RING, action);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        // Return the result
+        setResult(result);
+        finish();
         // Use flip animation
         overridePendingTransition(R.anim.card_flip_in, R.anim.card_flip_out);
     }
