@@ -43,74 +43,67 @@ public class AlarmRinger {
         // Make sure we are stopped before starting
         stop(context);
 
-        // Check which ringtone to use
+        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
 
+        // Check which ringtone is set in preferences
         String alarmUriStr = sharedPrefs.getString(SettingsFragment.KEY_RINGTONE, "");
-
-        // The URI Will be empty if set to "None". If it is, don't bother setting up a MediaPlayer
-        if (!alarmUriStr.isEmpty()) {
-            // Set up the media player
-            mediaPlayer = new MediaPlayer();
-            mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-                // Handles asynchronous errors. Synchronous exceptions are handled by try-catch
-                @Override
-                public boolean onError(MediaPlayer mediaPlayer, int what, int extra) {
-                    Log.e(tag, "Error while playing alarm");
-                    mediaPlayer.stop();
-                    mediaPlayer.release();
-                    mediaPlayer = null;
-                    return true;
-                }
-            });
-
-            // If user is in a call, use a lower volume so we don't disrupt the call.
-            if (inTelephoneCall)
-                mediaPlayer.setVolume(IN_CALL_VOLUME, IN_CALL_VOLUME);
-
-            try {
-                Uri alarmUri = Uri.parse(alarmUriStr);
-                mediaPlayer.setDataSource(context, alarmUri);
-                startAlarm(context, mediaPlayer);
-            } catch (IOException e) {
-                try {
-                    Log.e(tag, "Failed to play selected ringtone. Trying to use default ringtone");
-                    e.printStackTrace();
-                    mediaPlayer.reset(); // Reset error state
-                    Uri defaultAlarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-                    mediaPlayer.setDataSource(context, defaultAlarmUri);
-                    startAlarm(context, mediaPlayer);
-                } catch (IOException e1) {
-                    cleanUpMediaPlayer(context);
-                    Log.e(tag, "Failed to play default ringtone:");
-                    e1.printStackTrace();
-                }
-            }
-        }
-
-        // Check if vibration is enabled
+        // Check if the ringtone is "None" (an empty string), or if the volume is 0
+        boolean ring = !alarmUriStr.isEmpty() || audioManager.getStreamVolume(STREAM_TYPE) > 0;
+        // Check if vibration is enabled in preferences
         boolean vibrate = sharedPrefs.getBoolean(SettingsFragment.KEY_VIBRATE, false);
 
-        if (vibrate)
+        if (ring || vibrate) started = true; // Only set `started` if we'll actually do something
+
+        if (vibrate) // Start vibrating the device
             getVibrator(context).vibrate(new long[]{500, 500}, 0);
 
-        started = true;
+        if (!ring) return;
+
+        // Set up the media player
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            // Handles asynchronous errors. Synchronous exceptions are handled by try-catch
+            @Override
+            public boolean onError(MediaPlayer mediaPlayer, int what, int extra) {
+                Log.e(tag, "Error while playing alarm");
+                mediaPlayer.stop();
+                mediaPlayer.release();
+                mediaPlayer = null;
+                return true;
+            }
+        });
+        mediaPlayer.setAudioStreamType(STREAM_TYPE);
+        mediaPlayer.setLooping(true);
+
+        // If user is in a call, use a lower volume so we don't disrupt the call.
+        if (inTelephoneCall)
+            mediaPlayer.setVolume(IN_CALL_VOLUME, IN_CALL_VOLUME);
+
+        try {
+            Uri alarmUri = Uri.parse(alarmUriStr);
+            mediaPlayer.setDataSource(context, alarmUri);
+            startAlarm(mediaPlayer, audioManager);
+        } catch (IOException e) {
+            try {
+                Log.e(tag, "Failed to play selected ringtone. Trying to use default ringtone");
+                e.printStackTrace();
+                mediaPlayer.reset(); // Reset error state
+                Uri defaultAlarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+                mediaPlayer.setDataSource(context, defaultAlarmUri);
+                startAlarm(mediaPlayer, audioManager);
+            } catch (IOException e1) {
+                cleanUpMediaPlayer(context);
+                Log.e(tag, "Failed to play default ringtone:");
+                e1.printStackTrace();
+            }
+        }
     }
 
     /**
-     * Do the common stuff when starting the alarm.
+     * Prepare the media player and play the ringtone
      */
-    private static void startAlarm(Context context, MediaPlayer player) throws IOException {
-        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-
-        // Don't play alarm if stream volume is 0 (typically because ringer mode is silent)
-        if (audioManager.getStreamVolume(STREAM_TYPE) == 0) {
-            cleanUpMediaPlayer(context);
-            return;
-        }
-
-        player.setAudioStreamType(STREAM_TYPE);
-        player.setLooping(true);
+    private static void startAlarm(MediaPlayer player, AudioManager audioManager) throws IOException {
         player.prepare();
         audioManager.requestAudioFocus(null, STREAM_TYPE, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         player.start();
