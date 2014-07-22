@@ -140,7 +140,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             case R.id.reset_btn:
                 cancelScheduledAlarm();
 
-                resetTimer();
+                resetTimerUI();
 
                 // Analytics
                 if (mixpanel != null) {
@@ -188,7 +188,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 break;
             case RingingActivity.RESULT_ALARM_RING_CANCEL:
                 // User chose to cancel
-                resetTimer();
+                resetTimerUI();
                 // Analytics
                 if (mixpanel != null) {
                     // We want to have a separate event for when the user presses the "cancel" btn
@@ -323,9 +323,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     /**
-     * Resets the timer and reverts the UI to its initial state
+     * Resets the CircleTimerView and reverts the Activity's UI to its initial state
      */
-    private void resetTimer() {
+    private void resetTimerUI() {
         timerState = STOPPED;
 
         // Reset the UI
