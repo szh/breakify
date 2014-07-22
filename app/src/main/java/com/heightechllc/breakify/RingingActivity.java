@@ -47,7 +47,8 @@ public class RingingActivity extends Activity implements View.OnClickListener {
         snoozeBtn.setOnClickListener(this);
         cancelBtn.setOnClickListener(this);
 
-        // TODO: Show notification
+        // Show ring notification (overwrites the persistent notification)
+        AlarmNotifications.showRingNotification(this);
 
         // Check if a call is active or ringing
         TelephonyManager telephonyManager = (TelephonyManager)
@@ -94,6 +95,9 @@ public class RingingActivity extends Activity implements View.OnClickListener {
         }
 
         // No need to stop alarm here, b/c it's stopped by onUserInteraction()
+
+        // Hide the ring notification
+        AlarmNotifications.hideNotification(this);
 
         // Return the result
         setResult(result);

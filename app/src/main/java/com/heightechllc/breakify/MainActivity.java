@@ -104,12 +104,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
         } else {
             // Check if an alarm is already running
             long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
-            if (scheduledRingTime == 0)
+            if (scheduledRingTime < 1)
                 return; // Means no alarm is scheduled
 
             // Get the total duration for the scheduled timer, so we can accurately show progress
             long totalTime = sharedPref.getLong("schedTotalTime", 0);
-            if (totalTime == 0) return; // Defensive programming
+            if (totalTime < 1) return; // Defensive programming
             circleTimer.setTotalTime(totalTime);
             // Calculate how much time is left
             long duration = scheduledRingTime - SystemClock.elapsedRealtime();
@@ -245,6 +245,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
             // APIs 1-18 use set()
             alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, ringTime, pi);
         }
+        // Show the persistent notification
+        AlarmNotifications.showUpcomingNotification(this, ringTime);
+
         // Record when the timer will ring
         sharedPref.edit().putLong("schedRingTime", ringTime).apply();
     }
@@ -373,6 +376,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, ALARM_MANAGER_REQUEST_CODE,
                     new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_CANCEL_CURRENT);
         alarmManager.cancel(pendingIntent);
+        // Hide the persistent notification
+        AlarmNotifications.hideNotification(this);
 
         // Remove record of when the time will ring
         sharedPref.edit().remove("schedRingTime").apply();
