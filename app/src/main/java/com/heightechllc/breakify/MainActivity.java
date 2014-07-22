@@ -99,7 +99,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (ring) {
             // Time's up! Open the RingingActivity
             Intent ringingIntent = new Intent(this, RingingActivity.class);
-            ringingIntent.setFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+            // Pass along FLAG_ACTIVITY_NO_USER_ACTION if it was set when calling this activity
+            if ((getIntent().getFlags() & Intent.FLAG_ACTIVITY_NO_USER_ACTION) != 0)
+                ringingIntent.setFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
             startActivityForResult(ringingIntent, RingingActivity.REQUEST_ALARM_RING);
         } else {
             // Check if an alarm is already running
