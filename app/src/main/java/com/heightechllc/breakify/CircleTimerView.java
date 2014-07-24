@@ -173,12 +173,28 @@ public class CircleTimerView extends View implements View.OnTouchListener {
         boolean pressedValue = pressed;
 
         // Check whether the user is pressing on the View
-        if (motionEvent.getActionMasked() == MotionEvent.ACTION_DOWN) pressed = true;
-        else if (motionEvent.getActionMasked() == MotionEvent.ACTION_UP) {
-            pressed = false;
-            // Notify the clickListener that the View has been clicked
-            if (clickListener != null) clickListener.onClick(this);
-        } else return false; // Ignore other event actions
+        switch (motionEvent.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                pressed = true;
+                break;
+            case MotionEvent.ACTION_UP:
+                if (pressed) { // Don't react if it wasn't pressed in the first place
+                    pressed = false;
+                    // Notify the clickListener that the View has been clicked
+                    if (clickListener != null) clickListener.onClick(this);
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                // If the user moved outside the view, cancel the press
+                if (pressed && (motionEvent.getX() < 0 || motionEvent.getX() > getWidth() ||
+                        motionEvent.getY() < 0 || motionEvent.getY() > getHeight())) {
+                    pressed = false;
+                    break;
+                }
+            default:
+                // Ignore other event actions
+                return false;
+        }
 
         // Redraw if the value of `pressed` has changed
         if (pressedValue != pressed) invalidate();
