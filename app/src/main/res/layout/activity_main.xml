@@ -25,8 +25,8 @@
         android:id="@+id/timer_layout"
         android:layout_width="250dp"
         android:layout_height="250dp"
-        android:layout_marginBottom="32dp"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:layout_marginBottom="@dimen/activity_vertical_margin">
 
         <com.heightechllc.breakify.CircleTimerView
             android:id="@+id/circle_timer"
@@ -51,6 +51,17 @@
             android:textSize="24sp"
             android:textStyle="bold" />
 
+        <ImageButton
+            android:id="@+id/reset_btn"
+            android:src="@drawable/ic_action_reset"
+            android:contentDescription="@string/reset"
+            android:background="@null"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:layout_gravity="bottom|end"
+            android:visibility="gone" />
+
     </FrameLayout>
 
     <fragment
@@ -59,13 +70,5 @@
         android:layout_height="wrap_content"
         android:name="com.heightechllc.breakify.DurationsDisplayFragment"
         tools:layout="@layout/durations_display" />
-
-    <Button
-        android:id="@+id/reset_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/reset"
-        android:layout_marginTop="16dp"
-        android:visibility="gone" />
 
 </LinearLayout>

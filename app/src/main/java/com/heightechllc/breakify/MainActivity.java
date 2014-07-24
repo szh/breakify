@@ -12,7 +12,7 @@ import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
@@ -61,7 +61,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     TextView stateLbl;
     TextView timeLbl;
     TextView startStopLbl;
-    Button resetBtn;
+    ImageButton resetBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +83,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         circleTimer.setOnClickListener(this);
         circleTimer.setTimeDisplay(timeLbl);
 
-        resetBtn = (Button) findViewById(R.id.reset_btn);
+        resetBtn = (ImageButton) findViewById(R.id.reset_btn);
         resetBtn.setOnClickListener(this);
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
