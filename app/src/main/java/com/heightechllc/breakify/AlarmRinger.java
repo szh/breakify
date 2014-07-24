@@ -49,7 +49,7 @@ public class AlarmRinger {
         // Check which ringtone is set in preferences
         String alarmUriStr = sharedPrefs.getString(SettingsFragment.KEY_RINGTONE, "");
         // Check if the ringtone is "None" (an empty string), or if the volume is 0
-        boolean ring = !alarmUriStr.isEmpty() || audioManager.getStreamVolume(STREAM_TYPE) > 0;
+        boolean ring = !alarmUriStr.isEmpty() && audioManager.getStreamVolume(STREAM_TYPE) > 0;
         // Check if vibration is enabled in preferences
         boolean vibrate = sharedPrefs.getBoolean(SettingsFragment.KEY_VIBRATE, false);
 
