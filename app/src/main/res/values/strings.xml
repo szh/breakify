@@ -9,8 +9,8 @@
     <string name="minutes">minutes</string>
     <string name="state_working">WORKING</string>
     <string name="state_breaking">BREAKING</string>
-    <string name="start_break_prompt">Ready to go on to your break?</string>
-    <string name="start_work_prompt">Ready to resume working?</string>
+    <string name="start_break_prompt">Time to get up, walk around and stretch your legs.\nReady to go on to your break?</string>
+    <string name="start_work_prompt">Did you enjoy your break?\nReady to resume working?</string>
     <string name="ok">OK</string>
     <string name="snooze">Snooze</string>
     <string name="cancel">Cancel</string>
