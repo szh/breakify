@@ -382,32 +382,36 @@ public class MainActivity extends Activity implements View.OnClickListener {
         sharedPref.edit().remove("schedTotalTime").apply();
 
 
-        // Show the undo bar with custom animations
-        UndoBarController.setAnimation(AnimationUtils.loadAnimation(this, R.anim.undobar_fade_in),
-                                       AnimationUtils.loadAnimation(this, R.anim.undobar_fade_out));
-        UndoBarController.show(this, getString(R.string.reset_toast), new UndoBarController.UndoListener() {
-            @Override
-            public void onUndo(Parcelable parcelable) {
-                if (prevTotalTime > 0 && prevRemainingTime > 0) {
-                    // Cause startTimer() to treat it like we're resuming (b/c we are)
-                    timerState = PAUSED;
-                    workState = prevWorkState;
-                    updateStateLbl();
-                    // Restore to the previous timer state, similar to how we restore a running
-                    //  timer from SharedPreferences in onCreate()
-                    circleTimer.setTotalTime(prevTotalTime);
-                    circleTimer.updateTimeLbl(prevRemainingTime);
-                    startTimer(prevRemainingTime);
-                } else {
-                    // Means the timer was complete when resetTimerUI() was called, so we need to
-                    //  start the timer from the beginning of the next state
-                    if (prevWorkState == WORK) workState = BREAK;
-                    else workState = WORK;
-                    updateStateLbl();
-                    startTimer();
-                }
-            }
-        });
+        // Create and show the undo bar
+        new UndoBarController.UndoBar(this)
+                .message(R.string.reset_toast)
+                .duration(3500)
+                .style(UndoBarController.UNDOSTYLE.setAnim( // Use base style with custom animations
+                    AnimationUtils.loadAnimation(this, R.anim.undobar_fade_in),
+                    AnimationUtils.loadAnimation(this, R.anim.undobar_fade_out)))
+                .listener(new UndoBarController.UndoListener() {
+                    @Override
+                    public void onUndo(Parcelable parcelable) {
+                        if (prevTotalTime > 0 && prevRemainingTime > 0) {
+                            // Cause startTimer() to treat it like we're resuming (b/c we are)
+                            timerState = PAUSED;
+                            workState = prevWorkState;
+                            updateStateLbl();
+                            // Restore to the previous timer state, similar to how we restore a
+                            //  running timer from SharedPreferences in onCreate()
+                            circleTimer.setTotalTime(prevTotalTime);
+                            circleTimer.updateTimeLbl(prevRemainingTime);
+                            startTimer(prevRemainingTime);
+                        } else {
+                            // Means the timer was complete when resetTimerUI() was called, so we
+                            //  need to start the timer from the beginning of the next state
+                            if (prevWorkState == WORK) workState = BREAK;
+                            else workState = WORK;
+                            updateStateLbl();
+                            startTimer();
+                        }
+                    }})
+                .show();
     }
 
     /**

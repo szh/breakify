@@ -26,4 +26,16 @@
         <!-- For SettingsActivity -->
     </style>
 
+    <!-- Always use the KitKat theme for the UndoBar -->
+    <style name="UndoBar" parent="UndoBarKitKat" />
+    <style name="UndoBarMessage" parent="UndoBarMessageKitKat" />
+    <style name="UndoBarButton" parent="UndoBarButtonKitKat" />
+    <!-- Override the style to change the padding -->
+    <style name="UndoBarKitKat" parent="UndoBarClassic">
+        <item name="android:background">@drawable/toast_frame_holo</item>
+        <item name="android:padding">0.0dip</item>
+        <item name="android:layout_marginLeft">48dp</item>
+        <item name="android:layout_marginRight">48dp</item>
+    </style>
+
 </resources>
