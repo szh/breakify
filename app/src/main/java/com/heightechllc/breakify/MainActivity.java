@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.view.View;
@@ -15,6 +16,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.cocosw.undobar.UndoBarController;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import org.json.JSONException;
@@ -53,15 +55,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private int timerState = STOPPED;
     private static int workState = WORK;
 
-    SharedPreferences sharedPref;
-    AlarmManager alarmManager;
+    // For restoring when user presses "Undo" in the undo bar
+    private long prevTotalTime, prevRemainingTime;
+    private int prevWorkState;
+
+    private SharedPreferences sharedPref;
+    private AlarmManager alarmManager;
 
     // UI Components
-    CircleTimerView circleTimer;
-    TextView stateLbl;
-    TextView timeLbl;
-    TextView startStopLbl;
-    ImageButton resetBtn;
+    private CircleTimerView circleTimer;
+    private TextView stateLbl, timeLbl, startStopLbl;
+    private ImageButton resetBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,7 +146,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             case R.id.reset_btn:
                 cancelScheduledAlarm();
 
-                resetTimerUI();
+                resetTimerUI(false);
 
                 // Analytics
                 if (mixpanel != null) {
@@ -190,7 +194,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 break;
             case RingingActivity.RESULT_ALARM_RING_CANCEL:
                 // User chose to cancel
-                resetTimerUI();
+                resetTimerUI(true);
                 // Analytics
                 if (mixpanel != null) {
                     // We want to have a separate event for when the user presses the "cancel" btn
@@ -326,8 +330,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     /**
      * Resets the CircleTimerView and reverts the Activity's UI to its initial state
+     * @param isTimerComplete Whether the timer is complete
      */
-    private void resetTimerUI() {
+    private void resetTimerUI(boolean isTimerComplete) {
         timerState = STOPPED;
 
         // Reset the UI
@@ -336,9 +341,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
         resetBtn.setVisibility(View.GONE);
         timeLbl.setText("");
 
+        // Record the state we're about to reset from, in case the user chooses to undo
+        if (isTimerComplete) {
+            prevTotalTime = prevRemainingTime = 0;
+        } else {
+            prevTotalTime = circleTimer.getTotalTime();
+            prevRemainingTime = circleTimer.getRemainingTime();
+        }
+        prevWorkState = workState;
+
         // Back to initial state
         workState = WORK;
-        stateLbl.setText(R.string.state_working);
+        updateStateLbl();
 
         // Update the start / stop label
         startStopLbl.setText(R.string.start);
@@ -349,6 +363,34 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         // Remove record of total timer duration
         sharedPref.edit().remove("schedTotalTime").apply();
+
+
+        // Show the undo bar with custom animations
+        UndoBarController.setAnimation(AnimationUtils.loadAnimation(this, R.anim.undobar_fade_in),
+                                       AnimationUtils.loadAnimation(this, R.anim.undobar_fade_out));
+        UndoBarController.show(this, getString(R.string.reset_toast), new UndoBarController.UndoListener() {
+            @Override
+            public void onUndo(Parcelable parcelable) {
+                if (prevTotalTime > 0 && prevRemainingTime > 0) {
+                    // Cause startTimer() to treat it like we're resuming (b/c we are)
+                    timerState = PAUSED;
+                    workState = prevWorkState;
+                    updateStateLbl();
+                    // Restore to the previous timer state, similar to how we restore a running
+                    //  timer from SharedPreferences in onCreate()
+                    circleTimer.setTotalTime(prevTotalTime);
+                    circleTimer.updateTimeLbl(prevRemainingTime);
+                    startTimer(prevRemainingTime);
+                } else {
+                    // Means the timer was complete when resetTimerUI() was called, so we need to
+                    //  start the timer from the beginning of the next state
+                    if (prevWorkState == WORK) workState = BREAK;
+                    else workState = WORK;
+                    updateStateLbl();
+                    startTimer();
+                }
+            }
+        });
     }
 
     /**
@@ -356,13 +398,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
      */
     private void switchWorkStates() {
         // Set the new state
-        if (workState == WORK) {
-            workState = BREAK;
-            stateLbl.setText(R.string.state_breaking);
-        } else {
-            workState = WORK;
-            stateLbl.setText(R.string.state_working);
-        }
+        if (workState == WORK) workState = BREAK;
+        else workState = WORK;
+        updateStateLbl();
 
         // Now start the timer
         startTimer();
@@ -385,4 +423,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
         sharedPref.edit().remove("schedRingTime").apply();
     }
 
+    /**
+     * Updates stateLbl with the appropriate text for the current workState
+     */
+    private void updateStateLbl() {
+        if (workState == WORK) stateLbl.setText(R.string.state_working);
+        else stateLbl.setText(R.string.state_breaking);
+    }
 }

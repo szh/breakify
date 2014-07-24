@@ -5,7 +5,8 @@
     <string name="start">START</string>
     <string name="stop">PAUSE</string>
     <string name="resume">RESUME</string>
-    <string name="reset">RESET</string>
+    <string name="reset">Reset</string>
+    <string name="reset_toast">Timer reset</string>
     <string name="minutes">minutes</string>
     <string name="state_working">WORKING</string>
     <string name="state_breaking">BREAKING</string>
