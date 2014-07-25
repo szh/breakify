@@ -401,6 +401,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             //  running timer from SharedPreferences in onCreate()
                             circleTimer.setTotalTime(prevTotalTime);
                             circleTimer.updateTimeLbl(prevRemainingTime);
+                            // Record the total duration, so we can resume if the activity is destroyed
+                            sharedPref.edit().putLong("schedTotalTime", prevTotalTime).apply();
                             startTimer(prevRemainingTime);
                         } else {
                             // Means the timer was complete when resetTimerUI() was called, so we
