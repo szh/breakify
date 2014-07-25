@@ -412,6 +412,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             updateStateLbl();
                             startTimer();
                         }
+                        // Analytics
+                        if (mixpanel != null) mixpanel.track("Timer reset undone", null);
                     }})
                 .show();
     }
