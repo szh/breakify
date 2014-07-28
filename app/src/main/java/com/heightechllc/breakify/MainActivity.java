@@ -55,6 +55,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public static MixpanelAPI mixpanel;
 
     public static final String EXTRA_ALARM_RING = "com.heightechllc.breakify.AlarmRing";
+    public static final String EXTRA_SNOOZE = "com.heightechllc.breakify.Snooze";
 
     private final int ALARM_MANAGER_REQUEST_CODE = 613;
 
@@ -114,34 +115,46 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (sharedPref.getBoolean(SettingsFragment.KEY_ANALYTICS_ENABLED, false))
             mixpanel = MixpanelAPI.getInstance(this, "d78a075fc861c288e24664a8905a6698");
 
+        //TODO: Handle the following two flags using `onNewIntent()`
+
         // If the Activity is launched from AlarmReceiver, meaning the timer finished and we
         //  need to ring the alarm, `EXTRA_ALARM_RING` will be `true`
-        boolean ring = getIntent().getBooleanExtra(EXTRA_ALARM_RING, false);
-        if (ring) {
+        if (getIntent().getBooleanExtra(EXTRA_ALARM_RING, false)) {
             // Time's up! Open the RingingActivity
             Intent ringingIntent = new Intent(this, RingingActivity.class);
             // Pass along FLAG_ACTIVITY_NO_USER_ACTION if it was set when calling this activity
             if ((getIntent().getFlags() & Intent.FLAG_ACTIVITY_NO_USER_ACTION) != 0)
                 ringingIntent.setFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
             startActivityForResult(ringingIntent, RingingActivity.REQUEST_ALARM_RING);
-        } else {
-            // Check if an alarm is already running
-            long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
-            if (scheduledRingTime < 1)
-                return; // Means no alarm is scheduled
 
-            // Get the total duration for the scheduled timer, so we can accurately show progress
-            long totalTime = sharedPref.getLong("schedTotalTime", 0);
-            if (totalTime < 1) return; // Defensive programming
-            circleTimer.setTotalTime(totalTime);
-            // Calculate how much time is left
-            long duration = scheduledRingTime - SystemClock.elapsedRealtime();
-            // Update the time label and go go go!
-            circleTimer.updateTimeLbl(duration);
-            // Cause startTimer() to treat it like we're resuming (b/c we are)
-            timerState = PAUSED;
-            startTimer(duration);
+            return;
         }
+
+        // Check if the activity was launched from the expanded notification's "Snooze" action
+        if (getIntent().getBooleanExtra(EXTRA_SNOOZE, false)) {
+            snoozeTimer();
+            // In case user didn't interact with the RingingActivity, and instead snoozed directly
+            //  from the notification
+            AlarmRinger.stop(this);
+            return;
+        }
+
+        // Check if an alarm is already running
+        long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
+        if (scheduledRingTime < 1)
+            return; // Means no alarm is scheduled
+
+        // Get the total duration for the scheduled timer, so we can accurately show progress
+        long totalTime = sharedPref.getLong("schedTotalTime", 0);
+        if (totalTime < 1) return; // Defensive programming
+        circleTimer.setTotalTime(totalTime);
+        // Calculate how much time is left
+        long duration = scheduledRingTime - SystemClock.elapsedRealtime();
+        // Update the time label and go go go!
+        circleTimer.updateTimeLbl(duration);
+        // Cause startTimer() to treat it like we're resuming (b/c we are)
+        timerState = PAUSED;
+        startTimer(duration);
     }
 
     @Override
@@ -191,23 +204,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 switchWorkStates();
                 break;
             case RingingActivity.RESULT_ALARM_RING_SNOOZE:
-                // Get duration from preferences, in minutes
-                int snoozeDuration = sharedPref.getInt(SettingsFragment.KEY_SNOOZE_DURATION, 0);
-                // Snooze the timer
-                startTimer(snoozeDuration * 60000); // Multiply into milliseconds
-
-                // Analytics
-                if (mixpanel != null) {
-                    JSONObject props = new JSONObject();
-                    try {
-                        props.put("Duration", snoozeDuration);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    String eventName = workState == WORK ?
-                            "Work timer snoozed" : "Break timer snoozed";
-                    mixpanel.track(eventName, null);
-                }
+                snoozeTimer();
                 break;
             case RingingActivity.RESULT_ALARM_RING_CANCEL:
                 // User chose to cancel
@@ -222,7 +219,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 }
         }
     }
-
 
     /**
      * Starts the work or break timer
@@ -341,6 +337,31 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // Analytics
         if (mixpanel != null) {
             String eventName = workState == WORK ? "Work timer paused" : "Break timer paused";
+            mixpanel.track(eventName, null);
+        }
+    }
+
+    /**
+     * Snoozes the current timer for the duration stored in SharedPreferences
+     * TODO: Move this to a service so it can occur without opening the UI
+     *  (but show a toast if activity isn't open)
+     */
+    private void snoozeTimer() {
+        // Get duration from preferences, in minutes
+        int snoozeDuration = sharedPref.getInt(SettingsFragment.KEY_SNOOZE_DURATION, 0);
+        // Snooze the timer
+        startTimer(snoozeDuration * 60000); // Multiply into milliseconds
+
+        // Analytics
+        if (mixpanel != null) {
+            JSONObject props = new JSONObject();
+            try {
+                props.put("Duration", snoozeDuration);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            String eventName = workState == WORK ?
+                    "Work timer snoozed" : "Break timer snoozed";
             mixpanel.track(eventName, null);
         }
     }

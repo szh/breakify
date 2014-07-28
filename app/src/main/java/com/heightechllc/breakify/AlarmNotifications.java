@@ -116,7 +116,14 @@ public class AlarmNotifications {
 
         builder.setContentIntent(pi);
 
-        // TODO: Add "Snooze" action for expanded notification
+        // Add "Snooze" action for expanded notification
+        Intent snoozeIntent = new Intent(context, MainActivity.class);
+        snoozeIntent.putExtra(MainActivity.EXTRA_SNOOZE, true);
+        snoozeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent snoozePi = PendingIntent.getActivity(context, 1, snoozeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.addAction(R.drawable.ic_action_snooze, context.getString(R.string.snooze),
+                snoozePi);
 
         // Show the notification
         NotificationManager notificationManager = (NotificationManager)

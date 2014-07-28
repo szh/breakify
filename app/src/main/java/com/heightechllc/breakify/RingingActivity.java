@@ -114,7 +114,6 @@ public class RingingActivity extends Activity implements View.OnClickListener {
                 result = RESULT_ALARM_RING_SNOOZE;
                 break;
             case R.id.cancelBtn:
-                // TODO: Ask user to confirm?
                 result = RESULT_ALARM_RING_CANCEL;
                 break;
             default: return;
