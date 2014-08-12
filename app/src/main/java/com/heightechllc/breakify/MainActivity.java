@@ -126,24 +126,25 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // Handle the intent. Returns `true` if an action was taken, e.g. the RingingActivity was
         //  opened or the alarm was snoozed (see the 'extras' above), in which case we don't want
         //  to try to resume a saved alarm (since it already rang).
-        if (handleIntent(getIntent())) return;
+        if (!handleIntent(getIntent())) {
 
-        // No action was taken on the intent, so check if an alarm is running
-        long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
-        if (scheduledRingTime < 1)
-            return; // Means no alarm is scheduled
+            // No action was taken on the intent, so check if an alarm is running
+            long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
+            if (scheduledRingTime < 1)
+                return; // Means no alarm is scheduled
 
-        // Get the total duration for the scheduled timer, so we can accurately show progress
-        long totalTime = sharedPref.getLong("schedTotalTime", 0);
-        if (totalTime < 1) return; // Defensive programming
-        circleTimer.setTotalTime(totalTime);
-        // Calculate how much time is left
-        long duration = scheduledRingTime - SystemClock.elapsedRealtime();
-        // Update the time label and go go go!
-        circleTimer.updateTimeLbl(duration);
-        // Cause startTimer() to treat it like we're resuming (b/c we are)
-        timerState = PAUSED;
-        startTimer(duration);
+            // Get the total duration for the scheduled timer, so we can accurately show progress
+            long totalTime = sharedPref.getLong("schedTotalTime", 0);
+            if (totalTime < 1) return; // Defensive programming
+            circleTimer.setTotalTime(totalTime);
+            // Calculate how much time is left
+            long duration = scheduledRingTime - SystemClock.elapsedRealtime();
+            // Update the time label and go go go!
+            circleTimer.updateTimeLbl(duration);
+            // Cause startTimer() to treat it like we're resuming (b/c we are)
+            timerState = PAUSED;
+            startTimer(duration);
+        }
     }
 
     @Override
