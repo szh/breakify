@@ -123,29 +123,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (sharedPref.getBoolean(SettingsFragment.KEY_ANALYTICS_ENABLED, false))
             mixpanel = MixpanelAPI.getInstance(this, "d78a075fc861c288e24664a8905a6698");
 
-        // If the Activity is launched from AlarmReceiver, meaning the timer finished and we
-        //  need to ring the alarm, `EXTRA_ALARM_RING` will be `true`
-        if (getIntent().getBooleanExtra(EXTRA_ALARM_RING, false)) {
-            // Time's up! Open the RingingActivity
-            Intent ringingIntent = new Intent(this, RingingActivity.class);
-            // Pass along FLAG_ACTIVITY_NO_USER_ACTION if it was set when calling this activity
-            if ((getIntent().getFlags() & Intent.FLAG_ACTIVITY_NO_USER_ACTION) != 0)
-                ringingIntent.setFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
-            startActivityForResult(ringingIntent, RingingActivity.REQUEST_ALARM_RING);
+        // Handle the intent. Returns `true` if an action was taken, e.g. the RingingActivity was
+        //  opened or the alarm was snoozed (see the 'extras' above), in which case we don't want
+        //  to try to resume a saved alarm (since it already rang).
+        if (handleIntent(getIntent())) return;
 
-            return;
-        }
-
-        // Check if the activity was launched from the expanded notification's "Snooze" action
-        if (getIntent().getBooleanExtra(EXTRA_SNOOZE, false)) {
-            snoozeTimer();
-            // In case user didn't interact with the RingingActivity, and instead snoozed directly
-            //  from the notification
-            AlarmRinger.stop(this);
-            return;
-        }
-
-        // Check if an alarm is already running
+        // No action was taken on the intent, so check if an alarm is running
         long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
         if (scheduledRingTime < 1)
             return; // Means no alarm is scheduled
@@ -169,6 +152,47 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (mixpanel != null) mixpanel.flush();
 
         super.onDestroy();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        handleIntent(intent);
+    }
+
+    /**
+     * Handles a new intent, either from onNewIntent() or onCreate()
+     * @param intent The intent to handle
+     * @return Whether the intent was consumed (i.e. an action was taken, as instructed by an extra)
+     */
+    private boolean handleIntent(Intent intent) {
+        boolean consumed = false;
+
+        if (intent.getBooleanExtra(EXTRA_SNOOZE, false)) {
+            // The activity was launched from the expanded notification's "Snooze" action
+
+            snoozeTimer();
+            AlarmNotifications.hideNotification(this);
+            // In case user didn't interact with the RingingActivity, and instead snoozed directly
+            //  from the notification
+            AlarmRinger.stop(this);
+
+            consumed = true;
+        } else if (intent.getBooleanExtra(EXTRA_ALARM_RING, false)) {
+            // The Activity was launched from AlarmReceiver, meaning the timer finished and we
+            //  need to ring the alarm
+
+            Intent ringingIntent = new Intent(this, RingingActivity.class);
+            // Pass along FLAG_ACTIVITY_NO_USER_ACTION if it was set when calling this activity
+            if ((intent.getFlags() & Intent.FLAG_ACTIVITY_NO_USER_ACTION) != 0)
+                ringingIntent.setFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+            startActivityForResult(ringingIntent, RingingActivity.REQUEST_ALARM_RING);
+
+            consumed = true;
+        }
+
+        return consumed;
     }
 
     @Override
@@ -349,7 +373,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     /**
      * Snoozes the current timer for the duration stored in SharedPreferences
-     * TODO: Move this to a service so it can occur without opening the UI
      *  (but show a toast if activity isn't open)
      */
     private void snoozeTimer() {

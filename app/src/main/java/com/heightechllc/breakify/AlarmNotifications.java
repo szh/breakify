@@ -77,7 +77,7 @@ public class AlarmNotifications {
 
         // Set up the action for the when the notification is clicked - to open MainActivity
         Intent mainIntent = new Intent(context, MainActivity.class);
-        mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pi = PendingIntent.getActivity(context, 0, mainIntent,
                                             PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -110,7 +110,7 @@ public class AlarmNotifications {
         //  will open RingingActivity
         Intent mainIntent = new Intent(context, MainActivity.class);
         mainIntent.putExtra(MainActivity.EXTRA_ALARM_RING, true);
-        mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pi = PendingIntent.getActivity(context, 0, mainIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -119,7 +119,7 @@ public class AlarmNotifications {
         // Add "Snooze" action for expanded notification
         Intent snoozeIntent = new Intent(context, MainActivity.class);
         snoozeIntent.putExtra(MainActivity.EXTRA_SNOOZE, true);
-        snoozeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        snoozeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent snoozePi = PendingIntent.getActivity(context, 1, snoozeIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
         builder.addAction(R.drawable.ic_action_snooze, context.getString(R.string.snooze),
