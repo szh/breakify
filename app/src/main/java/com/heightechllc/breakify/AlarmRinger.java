@@ -57,8 +57,8 @@ public class AlarmRinger {
     }
 
     public static void start(final Context context, boolean inTelephoneCall) {
-        // Make sure we are stopped before starting
-        stop(context);
+        // Check if we're already running
+        if (started) return;
 
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
