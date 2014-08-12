@@ -128,22 +128,41 @@ public class MainActivity extends Activity implements View.OnClickListener {
         //  to try to resume a saved alarm (since it already rang).
         if (!handleIntent(getIntent())) {
 
-            // No action was taken on the intent, so check if an alarm is running
-            long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
-            if (scheduledRingTime < 1)
-                return; // Means no alarm is scheduled
+            // No action was taken on the intent, so check if an alarm is saved
 
-            // Get the total duration for the scheduled timer, so we can accurately show progress
             long totalTime = sharedPref.getLong("schedTotalTime", 0);
-            if (totalTime < 1) return; // Defensive programming
+            if (totalTime < 1) return; // Means no alarm is saved
+
+            // Get the scheduled ring time (which will only be set if the timer was running)
+            long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
+            // Get the saved time remaining for the paused timer (only set if the timer was paused)
+            long pausedTimeRemaining = sharedPref.getLong("pausedTimeRemaining", 0);
+
+            if (scheduledRingTime < 1 && pausedTimeRemaining < 1) return; // Defensive programming
+
             circleTimer.setTotalTime(totalTime);
-            // Calculate how much time is left
-            long duration = scheduledRingTime - SystemClock.elapsedRealtime();
-            // Update the time label and go go go!
-            circleTimer.updateTimeLbl(duration);
-            // Cause startTimer() to treat it like we're resuming (b/c we are)
-            timerState = PAUSED;
-            startTimer(duration);
+
+            if (scheduledRingTime > 0) {
+                // Restore running timer
+                // Calculate how much time is left
+                long remaining = scheduledRingTime - SystemClock.elapsedRealtime();
+                // Update the time label
+                circleTimer.updateTimeLbl(remaining);
+                // Cause startTimer() to treat it like we're resuming (b/c we are)
+                timerState = PAUSED;
+                // Go!
+                startTimer(remaining);
+
+            } else {
+                // Restore paused timer
+                circleTimer.updateTimeLbl(pausedTimeRemaining);
+                circleTimer.setPassedTime(totalTime - pausedTimeRemaining, true);
+                // Set UI for paused state
+                timerState = PAUSED;
+                setUIForPausedState();
+                resetBtn.setVisibility(View.VISIBLE);
+            }
+
         }
     }
 
@@ -298,8 +317,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // Show the persistent notification
         AlarmNotifications.showUpcomingNotification(this, ringTime);
 
-        // Record when the timer will ring
-        sharedPref.edit().putLong("schedRingTime", ringTime).apply();
+        // Record when the timer will ring and remove record of time remaining for the paused timer
+        sharedPref.edit().putLong("schedRingTime", ringTime).remove("pausedTimeRemaining").apply();
     }
 
     /**
@@ -349,13 +368,27 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * Pauses the timer
      */
     private void pauseTimer() {
-        // TODO: Implement saving and restoring paused timers between app runs and device boots
+        // Record the remaining time, so we can restore if the activity is destroyed
+        sharedPref.edit().putLong("pausedTimeRemaining", circleTimer.getRemainingTime()).apply();
 
         cancelScheduledAlarm();
         circleTimer.pauseIntervalAnimation();
 
         timerState = PAUSED;
 
+        setUIForPausedState();
+
+        // Analytics
+        if (mixpanel != null) {
+            String eventName = workState == WORK ? "Work timer paused" : "Break timer paused";
+            mixpanel.track(eventName, null);
+        }
+    }
+
+    /**
+     * Sets the UI for the "paused" state
+     */
+    private void setUIForPausedState() {
         // Update the start / stop label
         startStopLbl.setText(R.string.resume);
         startStopLbl.setVisibility(View.VISIBLE);
@@ -364,12 +397,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         Animation blinkAnim = AnimationUtils.loadAnimation(this, R.anim.blink);
         timeLbl.startAnimation(blinkAnim);
         stateLbl.startAnimation(blinkAnim);
-
-        // Analytics
-        if (mixpanel != null) {
-            String eventName = workState == WORK ? "Work timer paused" : "Break timer paused";
-            mixpanel.track(eventName, null);
-        }
     }
 
     /**
@@ -429,9 +456,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         circleTimer.stopIntervalAnimation();
         circleTimer.invalidate();
 
-        // Remove record of total timer duration
-        sharedPref.edit().remove("schedTotalTime").apply();
-
+        // Remove record of total timer duration and the time remaining for the paused timer
+        sharedPref.edit().remove("schedTotalTime").remove("pausedTimeRemaining").apply();
 
         // Create and show the undo bar
         new UndoBarController.UndoBar(this)
@@ -495,7 +521,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // Hide the persistent notification
         AlarmNotifications.hideNotification(this);
 
-        // Remove record of when the time will ring
+        // Remove record of when the timer will ring
         sharedPref.edit().remove("schedRingTime").apply();
     }
 
