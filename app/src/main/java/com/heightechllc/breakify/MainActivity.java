@@ -54,7 +54,15 @@ import org.json.JSONObject;
 public class MainActivity extends Activity implements View.OnClickListener {
     public static MixpanelAPI mixpanel;
 
+    /**
+     * Extra to instruct the Activity to open the RingingActivity. If FLAG_ACTIVITY_NO_USER_ACTION
+     * is set on the Intent, the alarm will begin ringing as well.
+     */
     public static final String EXTRA_ALARM_RING = "com.heightechllc.breakify.AlarmRing";
+    /**
+     * Extra to instruct the Activity to snooze the alarm. Add this when opening from the "Snooze"
+     * action of the expanded notification.
+     */
     public static final String EXTRA_SNOOZE = "com.heightechllc.breakify.Snooze";
 
     private final int ALARM_MANAGER_REQUEST_CODE = 613;
@@ -114,8 +122,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // Check if analytics are enabled in preferences
         if (sharedPref.getBoolean(SettingsFragment.KEY_ANALYTICS_ENABLED, false))
             mixpanel = MixpanelAPI.getInstance(this, "d78a075fc861c288e24664a8905a6698");
-
-        //TODO: Handle the following two flags using `onNewIntent()`
 
         // If the Activity is launched from AlarmReceiver, meaning the timer finished and we
         //  need to ring the alarm, `EXTRA_ALARM_RING` will be `true`
