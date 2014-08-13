@@ -136,36 +136,41 @@ public class MainActivity extends Activity implements View.OnClickListener {
             if (totalTime < 1) return; // Means no alarm is saved
 
             // Get the scheduled ring time (which will only be set if the timer was running)
-            // We need to convert from Unix / epoch time to elapsedRealtime
-            // TODO: Move this conversion to a Utils class or helper method
             long ringUnixTime = sharedPref.getLong("schedRingTime", 0);
-            long timeFromNow = ringUnixTime - System.currentTimeMillis();
-            long scheduledRingTime = SystemClock.elapsedRealtime() + timeFromNow;
             // Get the saved time remaining for the paused timer (only set if the timer was paused)
             long pausedTimeRemaining = sharedPref.getLong("pausedTimeRemaining", 0);
 
-            if (scheduledRingTime < 1 && pausedTimeRemaining < 1) return; // Defensive programming
-
-            //TODO: What if scheduledRingTime is in the past?
+            if (ringUnixTime < 1 && pausedTimeRemaining < 1) return; // Defensive programming
 
             // Restore the work state
             setWorkState(sharedPref.getInt("workState", WORK));
 
             circleTimer.setTotalTime(totalTime);
 
-            if (scheduledRingTime > 0) {
-                // Restore running timer
-                // Calculate how much time is left
-                long remaining = scheduledRingTime - SystemClock.elapsedRealtime();
-                // Update the time label
-                circleTimer.updateTimeLbl(remaining);
-                // Cause startTimer() to treat it like we're resuming (b/c we are)
-                timerState = PAUSED;
-                // Go!
-                startTimer(remaining);
+            if (ringUnixTime > 0) {
+                // Attempt to restore running timer
 
+                // Convert from Unix / epoch time to elapsedRealtime
+                // TODO: Move this conversion to a Utils class or helper method
+                long timeFromNow = ringUnixTime - System.currentTimeMillis();
+
+                // Check if the timer is scheduled to ring in the future or past
+                if (timeFromNow > 0) {
+                    // Ring time is in the future
+                    // Update the time label
+                    circleTimer.updateTimeLbl(timeFromNow);
+                    // Cause startTimer() to treat it like we're resuming (b/c we are)
+                    timerState = PAUSED;
+                    // Go!
+                    startTimer(timeFromNow);
+                } else {
+                    // Time past! Ring the alarm.
+                    Intent ringingIntent = new Intent(this, RingingActivity.class);
+                    startActivityForResult(ringingIntent, RingingActivity.REQUEST_ALARM_RING);
+                }
             } else {
-                // Restore paused timer
+                // Attempt to restore paused timer
+
                 circleTimer.updateTimeLbl(pausedTimeRemaining);
                 circleTimer.setPassedTime(totalTime - pausedTimeRemaining, true);
                 // Set UI for paused state
@@ -295,7 +300,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     /**
      * Starts the work or break timer
-     * @param duration The number of milliseconds to run the timer for
+     * @param duration The number of milliseconds to run the timer for. If currently paused, this is the remaining time.
      */
     private void startTimer(long duration) {
         // Stop blinking the time and state labels

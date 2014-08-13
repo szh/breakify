@@ -29,33 +29,40 @@ public class BootReceiver extends BroadcastReceiver {
 
         // Get the scheduled ring time (which will only be set if the timer was running)
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
-        // We need to convert from Unix / epoch time to elapsedRealtime
         long ringUnixTime = sharedPref.getLong("schedRingTime", 0);
+        if (ringUnixTime < 1) return; // Means no alarm is saved
+        // We need to convert from Unix / epoch time to elapsedRealtime
         long timeFromNow = ringUnixTime - System.currentTimeMillis();
-        long scheduledRingTime = SystemClock.elapsedRealtime() + timeFromNow;
 
-        if (scheduledRingTime < 1) return; // Means no running alarm is saved
-
-        //TODO: What if scheduledRingTime is in the past?
-
-        // Schedule the alarm to go off
-        PendingIntent pi = PendingIntent.getBroadcast(
-            context,
-            MainActivity.ALARM_MANAGER_REQUEST_CODE,
-            new Intent(context, AlarmReceiver.class),
-            PendingIntent.FLAG_UPDATE_CURRENT
-        );
-
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        if (Build.VERSION.SDK_INT >= 19) {
-            // API 19 needs setExact()
-            alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, scheduledRingTime, pi);
+        if (timeFromNow < 0) {
+            // Time is already up, so ring the alarm immediately
+            context.sendBroadcast(new Intent(context, AlarmReceiver.class));
         } else {
-            // APIs 1-18 use set()
-            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, scheduledRingTime, pi);
+            // Construct a PendingIntent for the AlarmManager to run when the time is up
+            PendingIntent pi = PendingIntent.getBroadcast(
+                    context,
+                    MainActivity.ALARM_MANAGER_REQUEST_CODE,
+                    new Intent(context, AlarmReceiver.class),
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+
+            // Schedule the alarm to go off
+            long scheduledRingTime = SystemClock.elapsedRealtime() + timeFromNow;
+            AlarmManager alarmManager = (AlarmManager)
+                    context.getSystemService(Context.ALARM_SERVICE);
+            if (Build.VERSION.SDK_INT >= 19) {
+                // API 19 needs setExact()
+                alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, scheduledRingTime, pi);
+            } else {
+                // APIs 1-18 use set()
+                alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, scheduledRingTime, pi);
+            }
+            // Show the persistent notification
+            AlarmNotifications.showUpcomingNotification(
+                    context,
+                    scheduledRingTime,
+                    sharedPref.getInt("workState", MainActivity.WORK)
+            );
         }
-        // Show the persistent notification
-        AlarmNotifications.showUpcomingNotification(context, scheduledRingTime,
-                sharedPref.getInt("workState", MainActivity.WORK));
     }
 }

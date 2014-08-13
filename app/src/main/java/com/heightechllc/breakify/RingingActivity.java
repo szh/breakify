@@ -20,7 +20,9 @@ package com.heightechllc.breakify;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
 import android.view.View;
@@ -118,6 +120,10 @@ public class RingingActivity extends Activity implements View.OnClickListener {
                 break;
             default: return;
         }
+
+        // Remove the preferences that store when the alarm is scheduled to ring
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPref.edit().remove("schedTotalTime").remove("schedRingTime").apply();
 
         // No need to stop alarm here, b/c it's stopped by onUserInteraction()
 
