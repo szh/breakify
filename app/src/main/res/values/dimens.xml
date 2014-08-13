@@ -26,4 +26,6 @@
 
     <dimen name="durations_display_layout_padding">8dp</dimen>
     <dimen name="durations_display_margin">12dp</dimen>
+
+    <dimen name="undobar_horizontal_margin">32dp</dimen>
 </resources>
