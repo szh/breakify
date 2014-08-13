@@ -81,7 +81,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private String tag = "MainActivity";
 
     private int timerState = STOPPED;
-    private static int workState = WORK;
+    private static int _workState = WORK;
 
     // For restoring when user presses "Undo" in the undo bar
     private long prevTotalTime, prevRemainingTime;
@@ -131,7 +131,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (!handleIntent(getIntent())) {
 
             // No action was taken on the intent, so check if an alarm is saved
-            //TODO: Restore work state
 
             long totalTime = sharedPref.getLong("schedTotalTime", 0);
             if (totalTime < 1) return; // Means no alarm is saved
@@ -146,6 +145,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
             long pausedTimeRemaining = sharedPref.getLong("pausedTimeRemaining", 0);
 
             if (scheduledRingTime < 1 && pausedTimeRemaining < 1) return; // Defensive programming
+
+            //TODO: What if scheduledRingTime is in the past?
+
+            // Restore the work state
+            setWorkState(sharedPref.getInt("workState", WORK));
 
             circleTimer.setTotalTime(totalTime);
 
@@ -250,7 +254,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
                 // Analytics
                 if (mixpanel != null) {
-                    String eventName = workState == WORK ?
+                    String eventName = getWorkState() == WORK ?
                             "Work timer reset" : "Break timer reset";
                     mixpanel.track(eventName, null);
                 }
@@ -283,7 +287,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 if (mixpanel != null) {
                     // We want to have a separate event for when the user presses the "cancel" btn
                     //  in RingingActivity, vs. when they press the "reset" btn
-                    String eventName = workState == WORK ?
+                    String eventName = getWorkState() == WORK ?
                             "Work timer cancelled" : "Break timer cancelled";
                     mixpanel.track(eventName, null);
                 }
@@ -335,7 +339,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, ringTime, pi);
         }
         // Show the persistent notification
-        AlarmNotifications.showUpcomingNotification(this, ringTime);
+        AlarmNotifications.showUpcomingNotification(this, ringTime, getWorkState());
 
         // Record when the timer will ring and remove record of time remaining for the paused timer.
         // Save the scheduled ring time using Unix / epoch time, not elapsedRealtime, b/c
@@ -360,13 +364,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
             // Analytics
             if (mixpanel != null) {
-                String eventName = workState == WORK ? "Work timer resumed" : "Break timer resumed";
+                String eventName = getWorkState() == WORK ?
+                        "Work timer resumed" : "Break timer resumed";
                 mixpanel.track(eventName, null);
             }
 
         } else {
             // Get duration from preferences, in minutes
-            if (workState == WORK) {
+            if (getWorkState() == WORK) {
                 duration = sharedPref.getInt(SettingsFragment.KEY_WORK_DURATION, 0);
             }
             else {
@@ -381,7 +386,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                String eventName = workState == WORK ? "Work timer started" : "Break timer started";
+                String eventName = getWorkState() == WORK ?
+                        "Work timer started" : "Break timer started";
                 mixpanel.track(eventName, props);
             }
 
@@ -407,7 +413,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         // Analytics
         if (mixpanel != null) {
-            String eventName = workState == WORK ? "Work timer paused" : "Break timer paused";
+            String eventName = getWorkState() == WORK ?
+                    "Work timer paused" : "Break timer paused";
             mixpanel.track(eventName, null);
         }
     }
@@ -444,7 +451,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            String eventName = workState == WORK ?
+            String eventName = getWorkState() == WORK ?
                     "Work timer snoozed" : "Break timer snoozed";
             mixpanel.track(eventName, null);
         }
@@ -470,11 +477,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
             prevTotalTime = circleTimer.getTotalTime();
             prevRemainingTime = circleTimer.getRemainingTime();
         }
-        prevWorkState = workState;
+        prevWorkState = getWorkState();
 
         // Back to initial state
-        workState = WORK;
-        updateStateLbl();
+        setWorkState(WORK);
 
         // Update the start / stop label
         startStopLbl.setText(R.string.start);
@@ -499,8 +505,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         if (prevTotalTime > 0 && prevRemainingTime > 0) {
                             // Cause startTimer() to treat it like we're resuming (b/c we are)
                             timerState = PAUSED;
-                            workState = prevWorkState;
-                            updateStateLbl();
+                            setWorkState(prevWorkState);
                             // Restore to the previous timer state, similar to how we restore a
                             //  running timer from SharedPreferences in onCreate()
                             circleTimer.setTotalTime(prevTotalTime);
@@ -511,9 +516,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         } else {
                             // Means the timer was complete when resetTimerUI() was called, so we
                             //  need to start the timer from the beginning of the next state
-                            if (prevWorkState == WORK) workState = BREAK;
-                            else workState = WORK;
-                            updateStateLbl();
+                            if (prevWorkState == WORK) setWorkState(BREAK);
+                            else setWorkState(WORK);
                             startTimer();
                         }
                         // Analytics
@@ -527,15 +531,32 @@ public class MainActivity extends Activity implements View.OnClickListener {
      */
     private void switchWorkStates() {
         // Set the new state
-        if (workState == WORK) workState = BREAK;
-        else workState = WORK;
-        updateStateLbl();
+        if (getWorkState() == WORK) setWorkState(BREAK);
+        else setWorkState(WORK);
 
         // Now start the timer
         startTimer();
     }
 
-    public static int getWorkState() { return workState; }
+    /**
+     * Set the timer's work state and update the state label. Not public or static like
+     *  getWorkState(), since we only want methods in MainActivity to be able to change the state.
+     */
+    private void setWorkState(int newState) {
+        _workState = newState;
+
+        // Update the state label
+        if (_workState == WORK) stateLbl.setText(R.string.state_working);
+        else stateLbl.setText(R.string.state_breaking);
+
+        // Save the work state to shared preferences
+        sharedPref.edit().putInt("workState", _workState).apply();
+    }
+
+    /**
+     * The current work state of the timer
+     */
+    public static int getWorkState() { return _workState; }
 
     /**
      * Cancels the alarm scheduled by startTimer()
@@ -550,13 +571,5 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         // Remove record of when the timer will ring
         sharedPref.edit().remove("schedRingTime").apply();
-    }
-
-    /**
-     * Updates stateLbl with the appropriate text for the current workState
-     */
-    private void updateStateLbl() {
-        if (workState == WORK) stateLbl.setText(R.string.state_working);
-        else stateLbl.setText(R.string.state_breaking);
     }
 }

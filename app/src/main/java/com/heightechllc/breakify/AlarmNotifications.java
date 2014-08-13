@@ -48,8 +48,9 @@ public class AlarmNotifications {
      * Shows an ongoing notification for an upcoming alarm
      * @param context The context to create the notification from
      * @param ringTime The time that the alarm will ring, based on `SystemClock.elapsedRealtime()`
+     * @param workState The work state of the timer
      */
-    public static void showUpcomingNotification(Context context, long ringTime) {
+    public static void showUpcomingNotification(Context context, long ringTime, int workState) {
         // Create the notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
         builder.setSmallIcon(R.drawable.ic_notification)
@@ -57,11 +58,9 @@ public class AlarmNotifications {
                .setPriority(NotificationCompat.PRIORITY_LOW);
 
         // Get the appropriate title based on the current work state
-        int titleId;
-        if (MainActivity.getWorkState() == MainActivity.WORK)
-            titleId = R.string.notif_upcoming_title_working;
-        else
-            titleId = R.string.notif_upcoming_title_breaking;
+        int titleId = workState == MainActivity.WORK ?
+                R.string.notif_upcoming_title_working :
+                R.string.notif_upcoming_title_breaking;
 
         builder.setContentTitle(context.getString(titleId));
 
@@ -89,7 +88,12 @@ public class AlarmNotifications {
         notificationManager.notify(notificationID, builder.build());
     }
 
-    public static void showRingNotification(Context context) {
+    /**
+     * Shows a notification to let the user know that the time is up
+     * @param context The context to create the notification from
+     * @param workState The work state of the finished timer
+     */
+    public static void showRingNotification(Context context, int workState) {
         // Create the notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
         builder.setSmallIcon(R.drawable.ic_notification)
@@ -98,11 +102,9 @@ public class AlarmNotifications {
                .setDefaults(NotificationCompat.DEFAULT_LIGHTS);
 
         // Get the appropriate text based on the current work state
-        int textId;
-        if (MainActivity.getWorkState() == MainActivity.WORK)
-            textId = R.string.notif_ring_content_text_working;
-        else
-            textId = R.string.notif_ring_content_text_breaking;
+        int textId = workState == MainActivity.WORK ?
+                R.string.notif_ring_content_text_working :
+                R.string.notif_ring_content_text_breaking;
 
         builder.setContentText(context.getString(textId));
 

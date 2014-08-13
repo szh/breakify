@@ -56,6 +56,7 @@ public class BootReceiver extends BroadcastReceiver {
             alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, scheduledRingTime, pi);
         }
         // Show the persistent notification
-        AlarmNotifications.showUpcomingNotification(context, scheduledRingTime);
+        AlarmNotifications.showUpcomingNotification(context, scheduledRingTime,
+                sharedPref.getInt("workState", MainActivity.WORK));
     }
 }

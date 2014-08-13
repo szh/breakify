@@ -66,7 +66,7 @@ public class RingingActivity extends Activity implements View.OnClickListener {
         cancelBtn.setOnClickListener(this);
 
         // Show ring notification (overwrites the persistent notification)
-        AlarmNotifications.showRingNotification(this);
+        AlarmNotifications.showRingNotification(this, MainActivity.getWorkState());
 
         // Check if a call is active or ringing
         TelephonyManager telephonyManager = (TelephonyManager)
