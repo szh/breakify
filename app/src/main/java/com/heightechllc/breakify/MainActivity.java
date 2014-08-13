@@ -20,8 +20,10 @@ package com.heightechllc.breakify;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -65,7 +67,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
      */
     public static final String EXTRA_SNOOZE = "com.heightechllc.breakify.Snooze";
 
-    private final int ALARM_MANAGER_REQUEST_CODE = 613;
+    public static final int ALARM_MANAGER_REQUEST_CODE = 613;
 
     // Timer states
     public static final int RUNNING = 1;
@@ -129,12 +131,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (!handleIntent(getIntent())) {
 
             // No action was taken on the intent, so check if an alarm is saved
+            //TODO: Restore work state
 
             long totalTime = sharedPref.getLong("schedTotalTime", 0);
             if (totalTime < 1) return; // Means no alarm is saved
 
             // Get the scheduled ring time (which will only be set if the timer was running)
-            long scheduledRingTime = sharedPref.getLong("schedRingTime", 0);
+            // We need to convert from Unix / epoch time to elapsedRealtime
+            // TODO: Move this conversion to a Utils class or helper method
+            long ringUnixTime = sharedPref.getLong("schedRingTime", 0);
+            long timeFromNow = ringUnixTime - System.currentTimeMillis();
+            long scheduledRingTime = SystemClock.elapsedRealtime() + timeFromNow;
             // Get the saved time remaining for the paused timer (only set if the timer was paused)
             long pausedTimeRemaining = sharedPref.getLong("pausedTimeRemaining", 0);
 
@@ -168,10 +175,23 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     @Override
     protected void onDestroy() {
+        super.onDestroy();
+
         // Send any unsent analytics events
         if (mixpanel != null) mixpanel.flush();
 
-        super.onDestroy();
+        // Enable or disable the boot receiver, which restores running alarms when the system boots.
+        //  We only want it enabled if an alarm is scheduled.
+        ComponentName receiver = new ComponentName(this, BootReceiver.class);
+        if (timerState == RUNNING) {
+            getPackageManager().setComponentEnabledSetting(receiver,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP);
+        } else {
+            getPackageManager().setComponentEnabledSetting(receiver,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP);
+        }
     }
 
     @Override
@@ -304,7 +324,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         // Schedule the alarm to go off
         PendingIntent pi = PendingIntent.getBroadcast(this, ALARM_MANAGER_REQUEST_CODE,
-                new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_UPDATE_CURRENT);
         long ringTime = SystemClock.elapsedRealtime() + duration;
         if (Build.VERSION.SDK_INT >= 19) {
             // API 19 needs setExact()
@@ -317,8 +337,15 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // Show the persistent notification
         AlarmNotifications.showUpcomingNotification(this, ringTime);
 
-        // Record when the timer will ring and remove record of time remaining for the paused timer
-        sharedPref.edit().putLong("schedRingTime", ringTime).remove("pausedTimeRemaining").apply();
+        // Record when the timer will ring and remove record of time remaining for the paused timer.
+        // Save the scheduled ring time using Unix / epoch time, not elapsedRealtime, b/c
+        //  that is reset on each boot.
+        long timeFromNow = ringTime - SystemClock.elapsedRealtime();
+        long ringUnixTime = System.currentTimeMillis() + timeFromNow;
+        sharedPref.edit()
+                .putLong("schedRingTime", ringUnixTime)
+                .remove("pausedTimeRemaining")
+                .apply();
     }
 
     /**
@@ -516,7 +543,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void cancelScheduledAlarm() {
         // Cancel the AlarmManager
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, ALARM_MANAGER_REQUEST_CODE,
-                    new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_CANCEL_CURRENT);
+                    new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_UPDATE_CURRENT);
         alarmManager.cancel(pendingIntent);
         // Hide the persistent notification
         AlarmNotifications.hideNotification(this);

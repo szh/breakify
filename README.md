@@ -9,7 +9,7 @@ Because I notice that I'm constantly getting caught up writing code and doing ot
 Todo
 ---
 A lot... This is pre-alpha code.
-First of all, we need tests. Also still missing simple things like persisting paused timers between runs, and persisting running timers between system restarts. I'm writing this as a fun side project, so I'll get to these and more whenever I do. If you want to help out though, you're more than welcome to. Keep reading below for instructions.
+First of all, we need tests. Also still missing simple things like integrating the custom ringtones in `/audio`. I'm writing this as a fun side project, so I'll get to things whenever I do. If you want to help out though, you're more than welcome to. Keep reading below for instructions.
 
 Building and Running
 ---
