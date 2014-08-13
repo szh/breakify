@@ -217,7 +217,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
             // The activity was launched from the expanded notification's "Snooze" action
 
             snoozeTimer();
-            AlarmNotifications.hideNotification(this);
             // In case user didn't interact with the RingingActivity, and instead snoozed directly
             //  from the notification
             AlarmRinger.stop(this);
@@ -333,8 +332,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (Build.VERSION.SDK_INT >= 19) {
             // API 19 needs setExact()
             alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, ringTime, pi);
-        }
-        else {
+        } else {
             // APIs 1-18 use set()
             alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, ringTime, pi);
         }
@@ -373,8 +371,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             // Get duration from preferences, in minutes
             if (getWorkState() == WORK) {
                 duration = sharedPref.getInt(SettingsFragment.KEY_WORK_DURATION, 0);
-            }
-            else {
+            } else {
                 duration = sharedPref.getInt(SettingsFragment.KEY_BREAK_DURATION, 0);
             }
 
@@ -438,9 +435,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
      *  (but show a toast if activity isn't open)
      */
     private void snoozeTimer() {
+        setWorkState(sharedPref.getInt("workState", WORK)); // Restore the timer state
         // Get duration from preferences, in minutes
         int snoozeDuration = sharedPref.getInt(SettingsFragment.KEY_SNOOZE_DURATION, 0);
-        // Snooze the timer
+        // Snooze the timer. startTimer() also shows the upcoming notification, which will
+        //  automatically hide the ringing notification, so we don't need to do it manually
         startTimer(snoozeDuration * 60000); // Multiply into milliseconds
 
         // Analytics

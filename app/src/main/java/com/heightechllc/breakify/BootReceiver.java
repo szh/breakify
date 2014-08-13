@@ -50,8 +50,7 @@ public class BootReceiver extends BroadcastReceiver {
         if (Build.VERSION.SDK_INT >= 19) {
             // API 19 needs setExact()
             alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, scheduledRingTime, pi);
-        }
-        else {
+        } else {
             // APIs 1-18 use set()
             alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, scheduledRingTime, pi);
         }
