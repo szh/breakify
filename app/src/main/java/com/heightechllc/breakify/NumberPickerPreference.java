@@ -31,12 +31,19 @@ import android.widget.TextView;
  */
 public class NumberPickerPreference extends DialogPreference {
 
+    /**
+     * If we can't find a default value, we fall back on this.
+     */
+    private static final int FALLBACK_DEFAULT = 1;
+
     private NumberPicker picker;
     private int min, max;
     private boolean minutes;
-    private Integer initialVal;
 
-    private static final int FALLBACK_DEFAULT = 1;
+    /**
+     * The preference value
+     */
+    private int value = FALLBACK_DEFAULT;
 
     public NumberPickerPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -66,8 +73,7 @@ public class NumberPickerPreference extends DialogPreference {
         picker = (NumberPicker) view.findViewById(R.id.num_picker);
         picker.setMinValue(min);
         picker.setMaxValue(max);
-
-        if (initialVal != null) picker.setValue(initialVal);
+        picker.setValue(value);
 
         // Show the "minutes" label if the number picker is for minutes
         //  (defaults to `visibility="gone"`)
@@ -83,9 +89,10 @@ public class NumberPickerPreference extends DialogPreference {
 
         if (which == DialogInterface.BUTTON_POSITIVE) {
             // User clicked "OK", so save the current selection
-            initialVal = picker.getValue();
-            persistInt(initialVal);
-            callChangeListener(initialVal);
+            if (callChangeListener(picker.getValue())) {
+                value = picker.getValue();
+                persistInt(value);
+            }
         }
     }
 
@@ -94,16 +101,16 @@ public class NumberPickerPreference extends DialogPreference {
         super.onSetInitialValue(restorePersistedValue, defaultValue);
 
         if (restorePersistedValue) {
-            initialVal = getPersistedInt(FALLBACK_DEFAULT);
+            value = getPersistedInt(FALLBACK_DEFAULT);
         } else {
-            initialVal = (Integer) defaultValue;
-            persistInt(initialVal);
+            value = ((Integer) defaultValue);
+            persistInt(value);
         }
     }
 
     @Override
     protected Object onGetDefaultValue(TypedArray a, int index) {
-        // We default to 1 (see end of `onSetInitialValue()`)
         return a.getInt(index, FALLBACK_DEFAULT);
     }
+
 }
