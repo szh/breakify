@@ -29,9 +29,6 @@ import android.preference.PreferenceFragment;
 
 /**
  * Fragment for user preferences. Subclass of {@link PreferenceFragment}
- * Use the {@link SettingsFragment#newInstance} factory method to
- * create an instance of this fragment.
- *
  */
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -44,14 +41,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     public static final String KEY_VIBRATE = "pref_key_vibrate";
 
     public static final String KEY_ANALYTICS_ENABLED = "pref_key_analytics_enabled";
-
-    /**
-     * Use this factory method to create a new instance of this fragment.
-     */
-    public static SettingsFragment newInstance() {
-        SettingsFragment fragment = new SettingsFragment();
-        return fragment;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

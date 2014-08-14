@@ -20,6 +20,9 @@ package com.heightechllc.breakify;
 import android.app.Activity;
 import android.os.Bundle;
 
+/**
+ * The activity that displays the user preferences, using {@link SettingsFragment}
+ */
 public class SettingsActivity extends Activity {
 
     @Override

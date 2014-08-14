@@ -31,7 +31,7 @@ import android.widget.TextView;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Round timer view.
+ * Round timer view. Draws a border with two colors, to indicate the progress of the timer.
  * Based on CircleTimerView from the Android clock app (deskclock), which is licensed under the
  *  Apache License, Version 2.0
  */

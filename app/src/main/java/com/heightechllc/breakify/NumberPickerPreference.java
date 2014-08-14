@@ -26,6 +26,9 @@ import android.view.View;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 
+/**
+ * Custom preference for numeric preference values, using a {@link NumberPicker}
+ */
 public class NumberPickerPreference extends DialogPreference {
 
     private NumberPicker picker;

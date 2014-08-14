@@ -21,10 +21,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+/**
+ * The BroadcastReceiver that is notified by the AlarmManager when the time is up
+ */
 public class AlarmReceiver extends BroadcastReceiver {
-    public AlarmReceiver() {
-    }
-
     @Override
     public void onReceive(Context context, Intent intent) {
         // Open MainActivity and add the extra to tell it to ring the alarm

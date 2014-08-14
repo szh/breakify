@@ -31,7 +31,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 /**
- * Activity displayed when the time is up. Plays ringtone and vibrates using AlarmRinger
+ * Activity displayed when the time is up. Plays ringtone and vibrates using AlarmRinger.
  */
 public class RingingActivity extends Activity implements View.OnClickListener {
     public static int REQUEST_ALARM_RING = 0;

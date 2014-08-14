@@ -30,8 +30,8 @@ import android.util.Log;
 import java.io.IOException;
 
 /**
- * Handles ringing and vibrating
- * Portions of code borrowed from AlarmKlaxon from the Android clock app (deskclock),
+ * Handles ringing and vibrating.
+ * Portions of code are borrowed from AlarmKlaxon in the Android clock app (deskclock),
  *  which is licensed under the Apache License, Version 2.0.
  */
 public class AlarmRinger {

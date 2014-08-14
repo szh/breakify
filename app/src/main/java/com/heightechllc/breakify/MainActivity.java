@@ -42,16 +42,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- *  The app's main activity. Controls the timer and main UI.
+ * The app's main activity. Controls the timer and main UI.
+ * Displays the timer's progress using a {@link CircleTimerView}.
  *
- *  The function of keeping the exact time that has elapsed in the timer is taken care of by
- *  the CircleTimerView, since it needs to refresh constantly anyway so it can animate. It also
- *  takes care of updating the `timeLbl` TextView to display the current time remaining.
- *
- *  The function of alerting when the time is up is handled by the AlarmManager below.
- *
- *  For analytics, I'm trying out Mixpanel to see if they're any better than Google Analytics, et al.
- *  They can be disabled in the SettingsActivity for those who don't like their usage to be tracked.
+ * For analytics, I'm trying out Mixpanel to see if they're any better than Google Analytics, et al.
+ * Analytics can be disabled in the {@link SettingsActivity} for those who don't like their usage
+ *  to be tracked.
  */
 public class MainActivity extends Activity implements View.OnClickListener {
     public static MixpanelAPI mixpanel;
