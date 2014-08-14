@@ -59,7 +59,7 @@ public class NumberPickerPreference extends DialogPreference {
 
         pickerStyles.recycle();
 
-        setDialogLayoutResource(R.layout.number_picker_preference);
+        setDialogLayoutResource(R.layout.pref_number_picker);
 
         setPositiveButtonText(android.R.string.ok);
         setNegativeButtonText(android.R.string.cancel);

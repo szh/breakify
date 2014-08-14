@@ -46,7 +46,7 @@ public class DurationsDisplayFragment extends Fragment implements View.OnClickLi
                              Bundle savedInstanceState) {
 
         // Set the layout
-        v = inflater.inflate(R.layout.durations_display, container);
+        v = inflater.inflate(R.layout.fragment_durations_display, container);
 
         // Set up UI components
         ImageButton editBtn = (ImageButton) v.findViewById(R.id.edit_btn);
