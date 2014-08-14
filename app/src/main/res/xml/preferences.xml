@@ -22,21 +22,21 @@
 
     <PreferenceCategory
         android:title="@string/pref_category_durations">
-        <com.heightechllc.breakify.NumberPickerPreference
+        <com.heightechllc.breakify.preferences.NumberPickerPreference
             android:key="pref_key_work_duration"
             android:title="@string/pref_work_duration_title"
             android:defaultValue="@integer/default_work_duration"
             app:maxValue="@integer/max_work_duration"
             app:minValue="1"
             app:minutes="true" />
-        <com.heightechllc.breakify.NumberPickerPreference
+        <com.heightechllc.breakify.preferences.NumberPickerPreference
             android:key="pref_key_break_duration"
             android:title="@string/pref_break_duration_title"
             android:defaultValue="@integer/default_break_duration"
             app:maxValue="@integer/max_break_duration"
             app:minValue="1"
             app:minutes="true" />
-        <com.heightechllc.breakify.NumberPickerPreference
+        <com.heightechllc.breakify.preferences.NumberPickerPreference
             android:key="pref_key_snooze_duration"
             android:title="@string/pref_snooze_duration_title"
             android:defaultValue="@integer/default_snooze_duration"

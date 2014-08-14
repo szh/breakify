@@ -36,6 +36,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.cocosw.undobar.UndoBarController;
+import com.heightechllc.breakify.preferences.SettingsFragment;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import org.json.JSONException;
@@ -46,8 +47,8 @@ import org.json.JSONObject;
  * Displays the timer's progress using a {@link CircleTimerView}.
  *
  * For analytics, I'm trying out Mixpanel to see if they're any better than Google Analytics, et al.
- * Analytics can be disabled in the {@link SettingsActivity} for those who don't like their usage
- *  to be tracked.
+ * Analytics can be disabled in the {@link com.heightechllc.breakify.preferences.SettingsActivity}
+ *  for those who don't like their usage to be tracked.
  */
 public class MainActivity extends Activity implements View.OnClickListener {
     public static MixpanelAPI mixpanel;
@@ -147,7 +148,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 // Attempt to restore running timer
 
                 // Convert from Unix / epoch time to elapsedRealtime
-                // TODO: Move this conversion to a Utils class or helper method
                 long timeFromNow = ringUnixTime - System.currentTimeMillis();
 
                 // Check if the timer is scheduled to ring in the future or past

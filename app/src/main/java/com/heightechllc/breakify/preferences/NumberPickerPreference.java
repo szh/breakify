@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.heightechllc.breakify;
+package com.heightechllc.breakify.preferences;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -25,6 +25,8 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.NumberPicker;
 import android.widget.TextView;
+
+import com.heightechllc.breakify.R;
 
 /**
  * Custom preference for numeric preference values, using a {@link NumberPicker}

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.heightechllc.breakify;
+package com.heightechllc.breakify.preferences;
 
 import android.app.Activity;
 import android.os.Bundle;

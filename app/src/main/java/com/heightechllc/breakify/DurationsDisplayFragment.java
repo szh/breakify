@@ -28,6 +28,9 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.heightechllc.breakify.preferences.SettingsActivity;
+import com.heightechllc.breakify.preferences.SettingsFragment;
+
 /**
  * Fragment for displaying the current settings for the work and break durations
  */

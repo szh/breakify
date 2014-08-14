@@ -69,7 +69,6 @@
 
     </GridLayout>
 
-    <!-- TODO: use gear icon? -->
     <ImageButton
         android:id="@+id/edit_btn"
         android:src="@android:drawable/ic_menu_edit"

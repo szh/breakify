@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.heightechllc.breakify;
+package com.heightechllc.breakify.preferences;
 
 
 import android.content.SharedPreferences;
@@ -25,6 +25,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+
+import com.heightechllc.breakify.MainActivity;
+import com.heightechllc.breakify.R;
 
 
 /**
