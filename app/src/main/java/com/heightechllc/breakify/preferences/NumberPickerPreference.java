@@ -18,7 +18,6 @@
 package com.heightechllc.breakify.preferences;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.res.TypedArray;
 import android.preference.DialogPreference;
 import android.util.AttributeSet;
@@ -86,10 +85,10 @@ public class NumberPickerPreference extends DialogPreference {
     }
 
     @Override
-    public void onClick(DialogInterface dialog, int which) {
-        super.onClick(dialog, which);
+    protected void onDialogClosed(boolean positiveResult) {
+        super.onDialogClosed(positiveResult);
 
-        if (which == DialogInterface.BUTTON_POSITIVE) {
+        if (positiveResult) {
             // User clicked "OK", so save the current selection
             if (callChangeListener(picker.getValue())) {
                 value = picker.getValue();
