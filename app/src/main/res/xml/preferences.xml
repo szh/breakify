@@ -54,11 +54,14 @@
             android:ringtoneType="alarm"
             android:showDefault="true"
             android:showSilent="true" />
+        <!-- Volume preference is handled in code. Just shows the system's volume controls. -->
+        <Preference
+            android:key="pref_key_volume"
+            android:title="@string/pref_volume" />
         <CheckBoxPreference
             android:key="pref_key_vibrate"
             android:title="@string/pref_vibrate"
             android:defaultValue="@bool/default_vibrate" />
-        <!-- TODO: Volume seekbar -->
     </PreferenceCategory>
 
     <PreferenceCategory

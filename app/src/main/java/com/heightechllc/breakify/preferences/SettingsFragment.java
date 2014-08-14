@@ -18,7 +18,9 @@
 package com.heightechllc.breakify.preferences;
 
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -26,6 +28,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 
+import com.heightechllc.breakify.AlarmRinger;
 import com.heightechllc.breakify.MainActivity;
 import com.heightechllc.breakify.R;
 
@@ -41,6 +44,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     public static final String KEY_SNOOZE_DURATION = "pref_key_snooze_duration";
 
     public static final String KEY_RINGTONE = "pref_key_ringtone";
+    public static final String KEY_VOLUME = "pref_key_volume";
     public static final String KEY_VIBRATE = "pref_key_vibrate";
 
     public static final String KEY_ANALYTICS_ENABLED = "pref_key_analytics_enabled";
@@ -52,17 +56,32 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         // Load the preferences from an XML resource
         addPreferencesFromResource(R.xml.preferences);
 
+        // Set up the "Volume" preference
+        findPreference(KEY_VOLUME).setOnPreferenceClickListener(
+                new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                // Show the system volume control for the stream type set in AlarmRinger.STREAM_TYPE
+                AudioManager audioManager = (AudioManager)
+                        getActivity().getSystemService(Context.AUDIO_SERVICE);
+                audioManager.adjustStreamVolume(AlarmRinger.STREAM_TYPE,
+                        AudioManager.ADJUST_SAME, AudioManager.FLAG_SHOW_UI);
+
+                return true;
+            }
+        });
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
         // Update the summaries for all of the preferences
         String[] keys = {KEY_WORK_DURATION, KEY_BREAK_DURATION, KEY_SNOOZE_DURATION};
         for (String key : keys)
             updateDurationPrefSummary(key);
 
         updateRingtonePrefSummary();
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
 
         getPreferenceScreen().getSharedPreferences().
                 registerOnSharedPreferenceChangeListener(this);
@@ -135,4 +154,5 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         // Update the summary
         findPreference(KEY_RINGTONE).setSummary(title);
     }
+
 }
