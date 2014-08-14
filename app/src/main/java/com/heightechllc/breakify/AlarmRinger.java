@@ -40,7 +40,7 @@ public class AlarmRinger {
     private static String tag = "AlarmRinger";
 
     private static final float IN_CALL_VOLUME = 0.125f;
-    private static final int STREAM_TYPE = AudioManager.STREAM_ALARM;
+    public static final int STREAM_TYPE = AudioManager.STREAM_ALARM;
 
     private static boolean started;
     private static MediaPlayer mediaPlayer;

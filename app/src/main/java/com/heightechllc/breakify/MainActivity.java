@@ -101,6 +101,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         setContentView(R.layout.activity_main);
 
+        // If the user presses the device's volume keys, we want to adjust the alarm volume
+        setVolumeControlStream(AlarmRinger.STREAM_TYPE);
+
         //
         // Set up components
         //
