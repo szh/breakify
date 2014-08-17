@@ -80,6 +80,14 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     }
 
     @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        // If the user presses the device's volume keys, we want to adjust the alarm volume
+        getActivity().setVolumeControlStream(AlarmRinger.STREAM_TYPE);
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
 
