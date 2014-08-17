@@ -50,7 +50,7 @@
         <RingtonePreference
             android:key="pref_key_ringtone"
             android:title="@string/pref_ringtone"
-            android:defaultValue="@string/default_ringtone"
+            android:defaultValue="@string/default_ringtone_path"
             android:ringtoneType="alarm"
             android:showDefault="true"
             android:showSilent="true" />

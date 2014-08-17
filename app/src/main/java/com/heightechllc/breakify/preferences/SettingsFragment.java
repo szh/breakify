@@ -29,6 +29,7 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 
 import com.heightechllc.breakify.AlarmRinger;
+import com.heightechllc.breakify.CustomAlarmTones;
 import com.heightechllc.breakify.MainActivity;
 import com.heightechllc.breakify.R;
 
@@ -53,7 +54,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Load the preferences from an XML resource
+        // Load the preferences from XML
         addPreferencesFromResource(R.xml.preferences);
 
         // Set up the "Volume" preference
@@ -70,6 +71,12 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                 return true;
             }
         });
+
+        // Set the default ringtone, if one has been set by CustomAlarmTones
+        String defaultRingtonePath = getPreferenceScreen().getSharedPreferences()
+                .getString(CustomAlarmTones.PREF_KEY_RINGTONE_DEFAULT, "");
+        if (!defaultRingtonePath.equals(""))
+            findPreference(KEY_RINGTONE).setDefaultValue(defaultRingtonePath);
     }
 
     @Override
@@ -110,8 +117,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         }
         else if (key.equals(KEY_ANALYTICS_ENABLED)) {
             // Check if the user disabled analytics
-            boolean analyticsEnabled = sharedPreferences.getBoolean(key,
-                        getResources().getBoolean(R.bool.default_analytics_enabled));
+            boolean analyticsEnabled = sharedPreferences.getBoolean(key, false);
             if (MainActivity.mixpanel != null && !analyticsEnabled)
                 MainActivity.mixpanel = null;
 

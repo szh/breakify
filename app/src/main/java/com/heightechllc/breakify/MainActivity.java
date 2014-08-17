@@ -75,7 +75,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public static final int WORK = 1;
     public static final int BREAK = 2;
 
-    private String tag = "MainActivity";
+    private final String tag = "MainActivity";
 
     private int timerState = STOPPED;
     private static int _workState = WORK;
@@ -129,56 +129,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
         //  opened or the alarm was snoozed (see the 'extras' above), in which case we don't want
         //  to try to resume a saved alarm (since it already rang).
         if (!handleIntent(getIntent())) {
-
             // No action was taken on the intent, so check if an alarm is saved
-
-            long totalTime = sharedPref.getLong("schedTotalTime", 0);
-            if (totalTime < 1) return; // Means no alarm is saved
-
-            // Get the scheduled ring time (which will only be set if the timer was running)
-            long ringUnixTime = sharedPref.getLong("schedRingTime", 0);
-            // Get the saved time remaining for the paused timer (only set if the timer was paused)
-            long pausedTimeRemaining = sharedPref.getLong("pausedTimeRemaining", 0);
-
-            if (ringUnixTime < 1 && pausedTimeRemaining < 1) return; // Defensive programming
-
-            // Restore the work state
-            setWorkState(sharedPref.getInt("workState", WORK));
-
-            circleTimer.setTotalTime(totalTime);
-
-            if (ringUnixTime > 0) {
-                // Attempt to restore running timer
-
-                // Convert from Unix / epoch time to elapsedRealtime
-                long timeFromNow = ringUnixTime - System.currentTimeMillis();
-
-                // Check if the timer is scheduled to ring in the future or past
-                if (timeFromNow > 0) {
-                    // Ring time is in the future
-                    // Update the time label
-                    circleTimer.updateTimeLbl(timeFromNow);
-                    // Cause startTimer() to treat it like we're resuming (b/c we are)
-                    timerState = PAUSED;
-                    // Go!
-                    startTimer(timeFromNow);
-                } else {
-                    // Time past! Ring the alarm.
-                    Intent ringingIntent = new Intent(this, RingingActivity.class);
-                    startActivityForResult(ringingIntent, RingingActivity.REQUEST_ALARM_RING);
-                }
-            } else {
-                // Attempt to restore paused timer
-
-                circleTimer.updateTimeLbl(pausedTimeRemaining);
-                circleTimer.setPassedTime(totalTime - pausedTimeRemaining, true);
-                // Set UI for paused state
-                timerState = PAUSED;
-                setUIForPausedState();
-                resetBtn.setVisibility(View.VISIBLE);
-            }
-
+            restoreSavedTimer();
         }
+
+        // Add the custom alarm tones to the phone's storage, if they weren't copied yet.
+        // Works on a separate thread.
+        if (!sharedPref.getBoolean(CustomAlarmTones.PREF_KEY_RINGTONES_COPIED, false))
+            CustomAlarmTones.installToStorage(this);
     }
 
     @Override
@@ -207,39 +165,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         super.onNewIntent(intent);
 
         handleIntent(intent);
-    }
-
-    /**
-     * Handles a new intent, either from onNewIntent() or onCreate()
-     * @param intent The intent to handle
-     * @return Whether the intent was consumed (i.e. an action was taken, as instructed by an extra)
-     */
-    private boolean handleIntent(Intent intent) {
-        boolean consumed = false;
-
-        if (intent.getBooleanExtra(EXTRA_SNOOZE, false)) {
-            // The activity was launched from the expanded notification's "Snooze" action
-
-            snoozeTimer();
-            // In case user didn't interact with the RingingActivity, and instead snoozed directly
-            //  from the notification
-            AlarmRinger.stop(this);
-
-            consumed = true;
-        } else if (intent.getBooleanExtra(EXTRA_ALARM_RING, false)) {
-            // The Activity was launched from AlarmReceiver, meaning the timer finished and we
-            //  need to ring the alarm
-
-            Intent ringingIntent = new Intent(this, RingingActivity.class);
-            // Pass along FLAG_ACTIVITY_NO_USER_ACTION if it was set when calling this activity
-            if ((intent.getFlags() & Intent.FLAG_ACTIVITY_NO_USER_ACTION) != 0)
-                ringingIntent.setFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
-            startActivityForResult(ringingIntent, RingingActivity.REQUEST_ALARM_RING);
-
-            consumed = true;
-        }
-
-        return consumed;
     }
 
     @Override
@@ -295,6 +220,93 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     mixpanel.track(eventName, null);
                 }
         }
+    }
+
+    /**
+     * Handles a new intent, either from onNewIntent() or onCreate()
+     * @param intent The intent to handle
+     * @return Whether the intent was consumed (i.e. an action was taken, as instructed by an extra)
+     */
+    private boolean handleIntent(Intent intent) {
+        boolean consumed = false;
+
+        if (intent.getBooleanExtra(EXTRA_SNOOZE, false)) {
+            // The activity was launched from the expanded notification's "Snooze" action
+
+            snoozeTimer();
+            // In case user didn't interact with the RingingActivity, and instead snoozed directly
+            //  from the notification
+            AlarmRinger.stop(this);
+
+            consumed = true;
+        } else if (intent.getBooleanExtra(EXTRA_ALARM_RING, false)) {
+            // The Activity was launched from AlarmReceiver, meaning the timer finished and we
+            //  need to ring the alarm
+
+            Intent ringingIntent = new Intent(this, RingingActivity.class);
+            // Pass along FLAG_ACTIVITY_NO_USER_ACTION if it was set when calling this activity
+            if ((intent.getFlags() & Intent.FLAG_ACTIVITY_NO_USER_ACTION) != 0)
+                ringingIntent.setFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+            startActivityForResult(ringingIntent, RingingActivity.REQUEST_ALARM_RING);
+
+            consumed = true;
+        }
+
+        return consumed;
+    }
+
+    /**
+     * Attempts to restore the timer state from SharedPreferences
+     * @return Whether the state was restored
+     */
+    private boolean restoreSavedTimer() {
+        long totalTime = sharedPref.getLong("schedTotalTime", 0);
+        if (totalTime < 1) return false; // Means no alarm is saved
+
+        // Get the scheduled ring time (which will only be set if the timer was running)
+        long ringUnixTime = sharedPref.getLong("schedRingTime", 0);
+        // Get the saved time remaining for the paused timer (only set if the timer was paused)
+        long pausedTimeRemaining = sharedPref.getLong("pausedTimeRemaining", 0);
+
+        if (ringUnixTime < 1 && pausedTimeRemaining < 1) return false; // Defensive programming
+
+        // Restore the work state
+        setWorkState(sharedPref.getInt("workState", WORK));
+
+        circleTimer.setTotalTime(totalTime);
+
+        if (ringUnixTime > 0) {
+            // Attempt to restore running timer
+
+            // Convert from Unix / epoch time to elapsedRealtime
+            long timeFromNow = ringUnixTime - System.currentTimeMillis();
+
+            // Check if the timer is scheduled to ring in the future or past
+            if (timeFromNow > 0) {
+                // Ring time is in the future
+                // Update the time label
+                circleTimer.updateTimeLbl(timeFromNow);
+                // Cause startTimer() to treat it like we're resuming (b/c we are)
+                timerState = PAUSED;
+                // Go!
+                startTimer(timeFromNow);
+            } else {
+                // Time past! Ring the alarm.
+                Intent ringingIntent = new Intent(this, RingingActivity.class);
+                startActivityForResult(ringingIntent, RingingActivity.REQUEST_ALARM_RING);
+            }
+        } else {
+            // Attempt to restore paused timer
+
+            circleTimer.updateTimeLbl(pausedTimeRemaining);
+            circleTimer.setPassedTime(totalTime - pausedTimeRemaining, true);
+            // Set UI for paused state
+            timerState = PAUSED;
+            setUIForPausedState();
+            resetBtn.setVisibility(View.VISIBLE);
+        }
+
+        return true;
     }
 
     /**
