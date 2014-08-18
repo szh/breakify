@@ -17,15 +17,24 @@
 
 package com.heightechllc.breakify.tests;
 
+import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.test.ActivityInstrumentationTestCase2;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
+import com.heightechllc.breakify.CircleTimerView;
 import com.heightechllc.breakify.MainActivity;
+import com.heightechllc.breakify.R;
 
 /**
  * Tests MainActivity
  */
 public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActivity> {
     private MainActivity mMainActivity;
+    private CircleTimerView mCircleTimer;
 
     public MainActivityTest() {
         super(MainActivity.class);
@@ -35,12 +44,98 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
     protected void setUp() throws Exception {
         super.setUp();
 
+        // Clear the app's shared preferences
+        PreferenceManager.getDefaultSharedPreferences(getInstrumentation().getTargetContext())
+                .edit().clear().commit();
+
         mMainActivity = getActivity();
+        mCircleTimer = (CircleTimerView) mMainActivity.findViewById(R.id.circle_timer);
     }
 
-    public void test_HelloWorld() {
-        assertNotNull(mMainActivity);
+
+    // Test that the start / stop label always gets updated
+
+    public void test_startStopLbl_showsStartTextBeforeStart() {
+        TextView startStopLbl = (TextView) mMainActivity.findViewById(R.id.start_stop_lbl);
+        assertEquals(mMainActivity.getString(R.string.start), startStopLbl.getText());
     }
 
-    //TODO: Add tests
+    public void test_startStopLbl_showsPauseTextWhileRunning() {
+        TextView startStopLbl = (TextView) mMainActivity.findViewById(R.id.start_stop_lbl);
+        // Start the timer
+        clickView(mCircleTimer);
+
+        assertEquals(mMainActivity.getString(R.string.stop), startStopLbl.getText());
+    }
+
+    public void test_startStopLbl_showsResumeTextWhilePaused() {
+        TextView startStopLbl = (TextView) mMainActivity.findViewById(R.id.start_stop_lbl);
+        // Start the timer
+        clickView(mCircleTimer);
+        // Pause the timer
+        clickView(mCircleTimer);
+
+        assertEquals(mMainActivity.getString(R.string.resume), startStopLbl.getText());
+    }
+
+    public void test_startStopLbl_showsStartTextWhenReset() {
+        TextView startStopLbl = (TextView) mMainActivity.findViewById(R.id.start_stop_lbl);
+        ImageButton resetBtn = (ImageButton) mMainActivity.findViewById(R.id.reset_btn);
+        // Start the timer
+        clickView(mCircleTimer);
+        // Reset the timer
+        clickView(resetBtn);
+
+        assertEquals(mMainActivity.getString(R.string.start), startStopLbl.getText());
+    }
+
+    //
+    // Helpers
+    //
+
+    /**
+     * Perform a click on a view
+     * @param v The view to click
+     */
+    private void clickView(View v) {
+
+        // Based on `TouchUtils.clickView()`, but doesn't call `waitForIdleSync()`. See comment
+        //  below for reason.
+
+        // Get the location of the middle of the view
+        int[] xy = new int[2];
+        v.getLocationOnScreen(xy);
+
+        float x = xy[0] + (v.getWidth() / 2.0f);
+        float y = xy[1] + (v.getHeight() / 2.0f);
+
+        long downTime = SystemClock.uptimeMillis();
+        long eventTime = SystemClock.uptimeMillis();
+
+        // Down
+        MotionEvent event = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, 0);
+        getInstrumentation().sendPointerSync(event);
+
+        // The trick is *not* to call `getInstrumentation().waitForIdleSync()` here, since it
+        //  makes the tests stop and hang, while the app keeps running (I'm not sure why - maybe
+        //  because the CircleTimerView animates continuously with `onDraw()` and `invalidate()`).
+        //  Instead just wait using `Thread.sleep()`.
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Up
+        eventTime = SystemClock.uptimeMillis();
+        event = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_UP, x, y, 0);
+        getInstrumentation().sendPointerSync(event);
+
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
