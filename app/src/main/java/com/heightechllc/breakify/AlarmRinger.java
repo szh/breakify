@@ -25,6 +25,8 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.heightechllc.breakify.preferences.SettingsFragment;
@@ -39,26 +41,56 @@ import java.io.IOException;
 public class AlarmRinger {
     private static String tag = "AlarmRinger";
 
-    private static final float IN_CALL_VOLUME = 0.125f;
     public static final int STREAM_TYPE = AudioManager.STREAM_ALARM;
 
     private static boolean started;
     private static MediaPlayer mediaPlayer;
 
+    /**
+     * PhoneStateListener to listen for when a call comes in, to stop the alarm
+     */
+    private static final PhoneStateListener phoneStateListener = new PhoneStateListener() {
+        @Override
+        public void onCallStateChanged(int state, String incomingNumber) {
+            if (state != TelephonyManager.CALL_STATE_IDLE) {
+                Log.d(tag, "Call state is " + state);
+
+                // Stop playing audio, but don't stop vibrating
+                if (mediaPlayer != null) {
+                    mediaPlayer.stop();
+                    mediaPlayer.reset();
+                    mediaPlayer.release();
+                    mediaPlayer = null;
+                }
+            }
+        }
+    };
+
+    /**
+     * Stops the alarm
+     */
     public static void stop(Context context) {
         // Check if alarm is already stopped
         if (!started) return;
 
         started = false;
 
+        // Stop vibrating
+        getVibrator(context).cancel();
+
         // Stop ringing and clean up the media player
         cleanUpMediaPlayer(context);
 
-        // Stop vibrating
-        getVibrator(context).cancel();
+        // Stop listening for call state changes
+        TelephonyManager telephonyManager = (TelephonyManager)
+                context.getSystemService(Context.TELEPHONY_SERVICE);
+        telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE);
     }
 
-    public static void start(final Context context, boolean inTelephoneCall) {
+    /**
+     * Starts the alarm
+     */
+    public static void start(final Context context) {
         // Check if we're already running
         if (started) return;
 
@@ -95,10 +127,6 @@ public class AlarmRinger {
         mediaPlayer.setAudioStreamType(STREAM_TYPE);
         mediaPlayer.setLooping(true);
 
-        // If user is in a call, use a lower volume so we don't disrupt the call.
-        if (inTelephoneCall)
-            mediaPlayer.setVolume(IN_CALL_VOLUME, IN_CALL_VOLUME);
-
         try {
             Uri alarmUri = Uri.parse(alarmUriStr);
             mediaPlayer.setDataSource(context, alarmUri);
@@ -117,6 +145,11 @@ public class AlarmRinger {
                 e1.printStackTrace();
             }
         }
+
+        // Listen for call state changes, so we can stop the alarm if the phone rings
+        TelephonyManager telephonyManager = (TelephonyManager)
+                context.getSystemService(Context.TELEPHONY_SERVICE);
+        telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
     }
 
     /**

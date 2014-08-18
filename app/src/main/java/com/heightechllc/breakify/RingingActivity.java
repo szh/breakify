@@ -18,12 +18,10 @@
 package com.heightechllc.breakify;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -70,11 +68,6 @@ public class RingingActivity extends Activity implements View.OnClickListener {
         // Show ring notification (overwrites the persistent notification)
         AlarmNotifications.showRingNotification(this, MainActivity.getWorkState());
 
-        // Check if a call is active or ringing
-        TelephonyManager telephonyManager = (TelephonyManager)
-                getSystemService(Context.TELEPHONY_SERVICE);
-        boolean inCall = (telephonyManager.getCallState() != TelephonyManager.CALL_STATE_IDLE);
-
         // Check if the activity was created from the AlarmReceiver, i.e., from the AlarmManager
         //  going off, in which case we want to ring / vibrate to get the user's attention; or
         //  from the user clicking the notification, in which case we don't need to ring b/c the
@@ -84,7 +77,7 @@ public class RingingActivity extends Activity implements View.OnClickListener {
             // Start ringing and / or vibrating (we do this here instead of in the broadcast
             //  receiver b/c we don't want the device to start ringing and vibrating before the
             //  activity shows up (in case there's a delay opening the activity, e.g. a slow device)
-            AlarmRinger.start(this, inCall);
+            AlarmRinger.start(this);
         }
     }
 
