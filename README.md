@@ -9,11 +9,11 @@ Because I notice that I'm constantly getting caught up writing code and doing ot
 Todo
 ---
 A lot... This is alpha code.
-First of all, we need tests. Also still missing lots of other features that I'd like to add. I'm writing this as a fun side project, so I'll get to things whenever I do. If you want to help out though, you're more than welcome to. Keep reading below for instructions.
+First of all, we need more tests. Also still missing lots of other features that I'd like to add. I'm writing this as a fun side project, so I'll get to things whenever I do. If you want to help out though, you're more than welcome to. Keep reading below for instructions.
 
 Building and Running
 ---
-Just clone this repository and build it in Android Studio.
+Just clone this repository and build it in Android Studio. To run the tests on a device or simulator, `cd` into the directory and run `./gradlew connectedAndroidTest`, or you can just use Android Studio and run the project with the "Android Tests" run configuration.
 
 Contributing
 ---
