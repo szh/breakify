@@ -58,7 +58,7 @@ public class AlarmNotifications {
                .setPriority(NotificationCompat.PRIORITY_LOW);
 
         // Get the appropriate title based on the current work state
-        int titleId = workState == MainActivity.WORK ?
+        int titleId = workState == MainActivity.WORK_STATE_WORKING ?
                 R.string.notif_upcoming_title_working :
                 R.string.notif_upcoming_title_breaking;
 
@@ -102,7 +102,7 @@ public class AlarmNotifications {
                .setDefaults(NotificationCompat.DEFAULT_LIGHTS);
 
         // Get the appropriate text based on the current work state
-        int textId = workState == MainActivity.WORK ?
+        int textId = workState == MainActivity.WORK_STATE_WORKING ?
                 R.string.notif_ring_content_text_working :
                 R.string.notif_ring_content_text_breaking;
 

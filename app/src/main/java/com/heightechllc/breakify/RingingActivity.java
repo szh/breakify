@@ -51,7 +51,7 @@ public class RingingActivity extends Activity implements View.OnClickListener {
 
         // Set label text
         TextView promptLbl = (TextView) findViewById(R.id.promptLbl);
-        if (MainActivity.getWorkState() == MainActivity.WORK)
+        if (MainActivity.getWorkState() == MainActivity.WORK_STATE_WORKING)
             promptLbl.setText(R.string.start_break_prompt);
         else
             promptLbl.setText(R.string.start_work_prompt);

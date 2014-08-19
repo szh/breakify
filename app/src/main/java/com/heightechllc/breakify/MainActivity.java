@@ -67,18 +67,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public static final int ALARM_MANAGER_REQUEST_CODE = 613;
 
     // Timer states
-    public static final int RUNNING = 1;
-    public static final int PAUSED = 2;
-    public static final int STOPPED = 0;
+    public static final int TIMER_STATE_RUNNING = 1;
+    public static final int TIMER_STATE_PAUSED = 2;
+    public static final int TIMER_STATE_STOPPED = 0;
 
     // Work states
-    public static final int WORK = 1;
-    public static final int BREAK = 2;
+    public static final int WORK_STATE_WORKING = 1;
+    public static final int WORK_STATE_BREAKING = 2;
 
     private final String tag = "MainActivity";
 
-    private int timerState = STOPPED;
-    private static int _workState = WORK;
+    private int timerState = TIMER_STATE_STOPPED;
+    private static int _workState = WORK_STATE_WORKING;
 
     // For restoring when user presses "Undo" in the undo bar
     private long prevTotalTime, prevRemainingTime;
@@ -149,7 +149,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // Enable or disable the boot receiver, which restores running alarms when the system boots.
         //  We only want it enabled if an alarm is scheduled.
         ComponentName receiver = new ComponentName(this, BootReceiver.class);
-        if (timerState == RUNNING) {
+        if (timerState == TIMER_STATE_RUNNING) {
             getPackageManager().setComponentEnabledSetting(receiver,
                     PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                     PackageManager.DONT_KILL_APP);
@@ -171,7 +171,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.circle_timer:
-                if (timerState == RUNNING) pauseTimer();
+                if (timerState == TIMER_STATE_RUNNING) pauseTimer();
                 else startTimer();
 
                 break;
@@ -182,7 +182,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
                 // Analytics
                 if (mixpanel != null) {
-                    String eventName = getWorkState() == WORK ?
+                    String eventName = getWorkState() == WORK_STATE_WORKING ?
                             "Work timer reset" : "Break timer reset";
                     mixpanel.track(eventName, null);
                 }
@@ -215,7 +215,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 if (mixpanel != null) {
                     // We want to have a separate event for when the user presses the "cancel" btn
                     //  in RingingActivity, vs. when they press the "reset" btn
-                    String eventName = getWorkState() == WORK ?
+                    String eventName = getWorkState() == WORK_STATE_WORKING ?
                             "Work timer cancelled" : "Break timer cancelled";
                     mixpanel.track(eventName, null);
                 }
@@ -271,7 +271,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (ringUnixTime < 1 && pausedTimeRemaining < 1) return false; // Defensive programming
 
         // Restore the work state
-        setWorkState(sharedPref.getInt("workState", WORK));
+        setWorkState(sharedPref.getInt("workState", WORK_STATE_WORKING));
 
         circleTimer.setTotalTime(totalTime);
 
@@ -287,7 +287,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 // Update the time label
                 circleTimer.updateTimeLbl(timeFromNow);
                 // Cause startTimer() to treat it like we're resuming (b/c we are)
-                timerState = PAUSED;
+                timerState = TIMER_STATE_PAUSED;
                 // Go!
                 startTimer(timeFromNow);
             } else {
@@ -301,7 +301,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             circleTimer.updateTimeLbl(pausedTimeRemaining);
             circleTimer.setPassedTime(totalTime - pausedTimeRemaining, true);
             // Set UI for paused state
-            timerState = PAUSED;
+            timerState = TIMER_STATE_PAUSED;
             setUIForPausedState();
             resetBtn.setVisibility(View.VISIBLE);
         }
@@ -325,7 +325,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         startStopLbl.setText(R.string.stop);
         startStopLbl.setVisibility(View.VISIBLE);
 
-        if (timerState == PAUSED && circleTimer.getTotalTime() > 0) {
+        if (timerState == TIMER_STATE_PAUSED && circleTimer.getTotalTime() > 0) {
             // We're resuming from a paused state, so calculate how much time is remaining, based
             //  on the total time set in the circleTimer
             circleTimer.setPassedTime(circleTimer.getTotalTime() - duration, false);
@@ -339,7 +339,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         circleTimer.startIntervalAnimation();
 
-        timerState = RUNNING;
+        timerState = TIMER_STATE_RUNNING;
 
         // Schedule the alarm to go off
         PendingIntent pi = PendingIntent.getBroadcast(this, ALARM_MANAGER_REQUEST_CODE,
@@ -372,20 +372,20 @@ public class MainActivity extends Activity implements View.OnClickListener {
      */
     private void startTimer() {
         long duration;
-        if (timerState == PAUSED) {
+        if (timerState == TIMER_STATE_PAUSED) {
             // Timer already started before, so just get the remaining time
             duration = circleTimer.getRemainingTime();
 
             // Analytics
             if (mixpanel != null) {
-                String eventName = getWorkState() == WORK ?
+                String eventName = getWorkState() == WORK_STATE_WORKING ?
                         "Work timer resumed" : "Break timer resumed";
                 mixpanel.track(eventName, null);
             }
 
         } else {
             // Get duration from preferences, in minutes
-            if (getWorkState() == WORK) {
+            if (getWorkState() == WORK_STATE_WORKING) {
                 duration = sharedPref.getInt(SettingsFragment.KEY_WORK_DURATION, 0);
             } else {
                 duration = sharedPref.getInt(SettingsFragment.KEY_BREAK_DURATION, 0);
@@ -399,7 +399,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                String eventName = getWorkState() == WORK ?
+                String eventName = getWorkState() == WORK_STATE_WORKING ?
                         "Work timer started" : "Break timer started";
                 mixpanel.track(eventName, props);
             }
@@ -420,13 +420,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
         cancelScheduledAlarm();
         circleTimer.pauseIntervalAnimation();
 
-        timerState = PAUSED;
+        timerState = TIMER_STATE_PAUSED;
 
         setUIForPausedState();
 
         // Analytics
         if (mixpanel != null) {
-            String eventName = getWorkState() == WORK ?
+            String eventName = getWorkState() == WORK_STATE_WORKING ?
                     "Work timer paused" : "Break timer paused";
             mixpanel.track(eventName, null);
         }
@@ -451,7 +451,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
      *  (but show a toast if activity isn't open)
      */
     private void snoozeTimer() {
-        setWorkState(sharedPref.getInt("workState", WORK)); // Restore the timer state
+        setWorkState(sharedPref.getInt("workState", WORK_STATE_WORKING)); // Restore the timer state
         // Get duration from preferences, in minutes
         int snoozeDuration = sharedPref.getInt(SettingsFragment.KEY_SNOOZE_DURATION, 0);
         // Snooze the timer. startTimer() also shows the upcoming notification, which will
@@ -466,7 +466,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            String eventName = getWorkState() == WORK ?
+            String eventName = getWorkState() == WORK_STATE_WORKING ?
                     "Work timer snoozed" : "Break timer snoozed";
             mixpanel.track(eventName, null);
         }
@@ -477,7 +477,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * @param isTimerComplete Whether the timer is complete
      */
     private void resetTimerUI(boolean isTimerComplete) {
-        timerState = STOPPED;
+        timerState = TIMER_STATE_STOPPED;
 
         // Reset the UI
         timeLbl.clearAnimation();
@@ -495,7 +495,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         prevWorkState = getWorkState();
 
         // Back to initial state
-        setWorkState(WORK);
+        setWorkState(WORK_STATE_WORKING);
 
         // Update the start / stop label
         startStopLbl.setText(R.string.start);
@@ -519,7 +519,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     public void onUndo(Parcelable parcelable) {
                         if (prevTotalTime > 0 && prevRemainingTime > 0) {
                             // Cause startTimer() to treat it like we're resuming (b/c we are)
-                            timerState = PAUSED;
+                            timerState = TIMER_STATE_PAUSED;
                             setWorkState(prevWorkState);
                             // Restore to the previous timer state, similar to how we restore a
                             //  running timer from SharedPreferences in onCreate()
@@ -531,8 +531,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         } else {
                             // Means the timer was complete when resetTimerUI() was called, so we
                             //  need to start the timer from the beginning of the next state
-                            if (prevWorkState == WORK) setWorkState(BREAK);
-                            else setWorkState(WORK);
+                            if (prevWorkState == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
+                            else setWorkState(WORK_STATE_WORKING);
                             startTimer();
                         }
                         // Analytics
@@ -546,8 +546,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
      */
     private void switchWorkStates() {
         // Set the new state
-        if (getWorkState() == WORK) setWorkState(BREAK);
-        else setWorkState(WORK);
+        if (getWorkState() == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
+        else setWorkState(WORK_STATE_WORKING);
 
         // Now start the timer
         startTimer();
@@ -561,7 +561,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         _workState = newState;
 
         // Update the state label
-        if (_workState == WORK) stateLbl.setText(R.string.state_working);
+        if (_workState == WORK_STATE_WORKING) stateLbl.setText(R.string.state_working);
         else stateLbl.setText(R.string.state_breaking);
 
         // Save the work state to shared preferences

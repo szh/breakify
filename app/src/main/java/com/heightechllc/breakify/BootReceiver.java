@@ -78,7 +78,7 @@ public class BootReceiver extends BroadcastReceiver {
             AlarmNotifications.showUpcomingNotification(
                     context,
                     scheduledRingTime,
-                    sharedPref.getInt("workState", MainActivity.WORK)
+                    sharedPref.getInt("workState", MainActivity.WORK_STATE_WORKING)
             );
         }
     }
