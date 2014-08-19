@@ -1,9 +1,77 @@
+/**
+ * Copyright (C) 2014  Shlomo Zalman Heigh
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import groovy.swing.SwingBuilder
+
+// Get password for signing key
+// Code adapted from http://stackoverflow.com/a/24360969/560722
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(':app:assembleRelease')) {
+        def storePass = ''
+        def keyPass = ''
+
+        if (System.console() == null) {
+            // Probably running in Android Studio, so show a GUI dialog
+            new SwingBuilder().edt {
+                dialog(modal: true, title: 'Enter password', alwaysOnTop: true, resizable: false,
+                        locationRelativeTo: null, pack: true, show: true) {
+                    vbox {
+                        label(text: 'Enter keystore password')
+                        def storePassInput = passwordField()
+                        label(text: 'Enter key password')
+                        def keyPassInput = passwordField()
+                        button(defaultButton: true, text: 'OK', actionPerformed: {
+                            storePass = new String(storePassInput.password)
+                            keyPass = new String(keyPassInput.password)
+                            dispose() // Close dialog
+                        })
+                    }
+                }
+            }
+        } else {
+            // Get passwords from console
+            storePass = System.console().readPassword('\nEnter keystore password: ')
+            keyPass = System.console().readPassword('\nEnter key password: ')
+        }
+
+        // Check that passwords were entered
+        if(storePass.size() <= 0 || keyPass.size() <= 0) {
+            throw new InvalidUserDataException("You must enter both passwords")
+        }
+
+        android.signingConfigs.release.storePassword = storePass
+        android.signingConfigs.release.keyPassword = keyPass
+    }
+}
+
+
+
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        release {
+            storeFile file("keystore.jks")
+            keyAlias 'breakify'
+        }
+    }
     compileSdkVersion 20
     defaultConfig {
-        applicationId "com.heightechllc.breakify"
+        applicationId 'com.heightechllc.breakify'
         minSdkVersion 14
         targetSdkVersion 20
         versionCode 1
@@ -11,7 +79,8 @@ android {
     }
     buildTypes {
         release {
-            runProguard false
+            signingConfig signingConfigs.release
+            runProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -26,9 +95,11 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
     // Mixpanel analytics
-    compile "com.mixpanel.android:mixpanel-android:4.2.1@aar"
+    compile 'com.mixpanel.android:mixpanel-android:4.2.1@aar'
+
     // github.com/soarcn/UndoBar
     compile 'com.cocosw:undobar:1.+@aar'
 
-    compile "com.android.support:support-v4:20.0.+"
+    // Android Support Library
+    compile 'com.android.support:support-v4:20.0.+'
 }
