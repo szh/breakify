@@ -21,6 +21,7 @@ import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -79,7 +80,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private final String tag = "MainActivity";
 
     private int timerState = TIMER_STATE_STOPPED;
-    private static int _workState = WORK_STATE_WORKING;
+    private int _workState = WORK_STATE_WORKING;
 
     // For restoring when user presses "Undo" in the undo bar
     private long prevTotalTime, prevRemainingTime;
@@ -614,8 +615,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     /**
-     * Set the timer's work state and update the state label. Not public or static like
-     *  getWorkState(), since we only want methods in MainActivity to be able to change the state.
+     * Set the timer's work state and update the state label
      */
     private void setWorkState(int newState) {
         _workState = newState;
@@ -631,7 +631,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
     /**
      * The current work state of the timer
      */
-    public static int getWorkState() { return _workState; }
+    private int getWorkState() { return _workState; }
+
+    public static int getWorkState(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getInt("workState", WORK_STATE_WORKING);
+    }
 
     /**
      * Cancels the alarm scheduled by startTimer()
