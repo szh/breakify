@@ -32,6 +32,7 @@ import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -91,13 +92,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private CircleTimerView circleTimer;
     private TextView stateLbl, timeLbl, startStopLbl;
     private ImageButton resetBtn;
+    private Button skipBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // Set up the default values for the preferences
-        PreferenceManager.setDefaultValues(getApplicationContext(), R.xml.preferences, true);
+        PreferenceManager.setDefaultValues(getApplicationContext(), R.xml.preferences, false);
 
         setContentView(R.layout.activity_main);
 
@@ -117,6 +119,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         resetBtn = (ImageButton) findViewById(R.id.reset_btn);
         resetBtn.setOnClickListener(this);
+
+        skipBtn = (Button) findViewById(R.id.skip_btn);
+        skipBtn.setOnClickListener(this);
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
@@ -188,6 +193,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 }
 
                 break;
+            case R.id.skip_btn:
+                skipToNextState();
         }
     }
 
@@ -203,7 +210,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         switch (resultCode) {
             case RingingActivity.RESULT_ALARM_RING_OK:
-                switchWorkStates();
+                // Set the new state
+                if (getWorkState() == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
+                else setWorkState(WORK_STATE_WORKING);
+
+                // Now start the timer
+                startTimer();
+
                 break;
             case RingingActivity.RESULT_ALARM_RING_SNOOZE:
                 snoozeTimer();
@@ -304,6 +317,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             timerState = TIMER_STATE_PAUSED;
             setUIForPausedState();
             resetBtn.setVisibility(View.VISIBLE);
+            skipBtn.setVisibility(View.VISIBLE);
         }
 
         return true;
@@ -318,8 +332,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         timeLbl.clearAnimation();
         stateLbl.clearAnimation();
 
-        // Show the "Reset" btn
+        // Show the "Reset" and "Skip" btns
         resetBtn.setVisibility(View.VISIBLE);
+        skipBtn.setVisibility(View.VISIBLE);
 
         // Update the start / stop label
         startStopLbl.setText(R.string.stop);
@@ -473,6 +488,67 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     /**
+     * Skips to the next timer state
+     */
+    private void skipToNextState() {
+        // Record the state we're about to skip from, in case the user chooses to undo
+        prevTotalTime = circleTimer.getTotalTime();
+        prevRemainingTime = circleTimer.getRemainingTime();
+        prevWorkState = getWorkState();
+
+        // Set the new state
+        if (getWorkState() == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
+        else setWorkState(WORK_STATE_WORKING);
+
+        String toastMessage;
+
+        // Get duration from preferences, in minutes
+        long duration;
+        if (getWorkState() == WORK_STATE_WORKING) {
+            duration = sharedPref.getInt(SettingsFragment.KEY_WORK_DURATION, 0);
+            toastMessage = "Work ";
+        } else {
+            duration = sharedPref.getInt(SettingsFragment.KEY_BREAK_DURATION, 0);
+            toastMessage = "Break ";
+        }
+
+        startTimer(duration * 60000); // Multiply into milliseconds
+
+        // Create and show the undo bar
+        toastMessage += getString(R.string.skip_toast);
+        showUndoBar(toastMessage, new UndoBarController.UndoListener() {
+            @Override
+            public void onUndo(Parcelable parcelable) {
+                // Cause startTimer() to treat it like we're resuming (b/c we are)
+                timerState = TIMER_STATE_PAUSED;
+                setWorkState(prevWorkState);
+                // Restore to the previous timer state, similar to how we restore a
+                //  running timer from SharedPreferences in onCreate()
+                circleTimer.setTotalTime(prevTotalTime);
+                circleTimer.updateTimeLbl(prevRemainingTime);
+                // Record the total duration, so we can resume if the activity is destroyed
+                sharedPref.edit().putLong("schedTotalTime", prevTotalTime).apply();
+                startTimer(prevRemainingTime);
+                // Analytics
+                if (mixpanel != null) mixpanel.track("Skip undone", null);
+            }
+        });
+
+        // Analytics
+        if (mixpanel != null) {
+            JSONObject props = new JSONObject();
+            try {
+                props.put("Duration", duration);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            String eventName = getWorkState() == WORK_STATE_WORKING ?
+                    "Skipped to work" : "Skipped to break";
+            mixpanel.track(eventName, props);
+        }
+    }
+
+    /**
      * Resets the CircleTimerView and reverts the Activity's UI to its initial state
      * @param isTimerComplete Whether the timer is complete
      */
@@ -483,6 +559,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         timeLbl.clearAnimation();
         stateLbl.clearAnimation();
         resetBtn.setVisibility(View.GONE);
+        skipBtn.setVisibility(View.GONE);
         timeLbl.setText("");
 
         // Record the state we're about to reset from, in case the user chooses to undo
@@ -508,49 +585,32 @@ public class MainActivity extends Activity implements View.OnClickListener {
         sharedPref.edit().remove("schedTotalTime").remove("pausedTimeRemaining").apply();
 
         // Create and show the undo bar
-        new UndoBarController.UndoBar(this)
-                .message(R.string.reset_toast)
-                .duration(3500)
-                .style(UndoBarController.UNDOSTYLE.setAnim( // Use base style with custom animations
-                    AnimationUtils.loadAnimation(this, R.anim.undobar_fade_in),
-                    AnimationUtils.loadAnimation(this, R.anim.undobar_fade_out)))
-                .listener(new UndoBarController.UndoListener() {
-                    @Override
-                    public void onUndo(Parcelable parcelable) {
-                        if (prevTotalTime > 0 && prevRemainingTime > 0) {
-                            // Cause startTimer() to treat it like we're resuming (b/c we are)
-                            timerState = TIMER_STATE_PAUSED;
-                            setWorkState(prevWorkState);
-                            // Restore to the previous timer state, similar to how we restore a
-                            //  running timer from SharedPreferences in onCreate()
-                            circleTimer.setTotalTime(prevTotalTime);
-                            circleTimer.updateTimeLbl(prevRemainingTime);
-                            // Record the total duration, so we can resume if the activity is destroyed
-                            sharedPref.edit().putLong("schedTotalTime", prevTotalTime).apply();
-                            startTimer(prevRemainingTime);
-                        } else {
-                            // Means the timer was complete when resetTimerUI() was called, so we
-                            //  need to start the timer from the beginning of the next state
-                            if (prevWorkState == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
-                            else setWorkState(WORK_STATE_WORKING);
-                            startTimer();
-                        }
-                        // Analytics
-                        if (mixpanel != null) mixpanel.track("Timer reset undone", null);
-                    }})
-                .show();
-    }
-
-    /**
-     * Switches the workState to the opposite of the current and then starts the timer
-     */
-    private void switchWorkStates() {
-        // Set the new state
-        if (getWorkState() == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
-        else setWorkState(WORK_STATE_WORKING);
-
-        // Now start the timer
-        startTimer();
+        showUndoBar(getString(R.string.reset_toast), new UndoBarController.UndoListener() {
+            @Override
+            public void onUndo(Parcelable parcelable) {
+                if (prevTotalTime > 0 && prevRemainingTime > 0) {
+                    // Cause startTimer() to treat it like we're resuming (b/c we are)
+                    timerState = TIMER_STATE_PAUSED;
+                    setWorkState(prevWorkState);
+                    // Restore to the previous timer state, similar to how we restore a
+                    //  running timer from SharedPreferences in onCreate()
+                    circleTimer.setTotalTime(prevTotalTime);
+                    circleTimer.updateTimeLbl(prevRemainingTime);
+                    // Record the total duration, so we can resume if the activity is destroyed
+                    sharedPref.edit().putLong("schedTotalTime", prevTotalTime).apply();
+                    startTimer(prevRemainingTime);
+                } else {
+                    // Means the timer was complete when resetTimerUI() was called, so we
+                    //  need to start the timer from the beginning of the next state
+                    if (prevWorkState == WORK_STATE_WORKING)
+                        setWorkState(WORK_STATE_BREAKING);
+                    else setWorkState(WORK_STATE_WORKING);
+                    startTimer();
+                }
+                // Analytics
+                if (mixpanel != null) mixpanel.track("Timer reset undone", null);
+            }
+        });
     }
 
     /**
@@ -586,5 +646,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         // Remove record of when the timer will ring
         sharedPref.edit().remove("schedRingTime").apply();
+    }
+
+    /**
+     * Shows an UndoBar with a duration of 3500ms and a style with fade animations
+     * @param message The message to display on the toast
+     * @param listener The UndoListener to be notified if the user presses "Undo"
+     */
+    private void showUndoBar(String message, UndoBarController.UndoListener listener) {
+        new UndoBarController.UndoBar(this)
+                .duration(3500)
+                .style(UndoBarController.UNDOSTYLE.setAnim( // Use base style with custom animations
+                        AnimationUtils.loadAnimation(this, R.anim.undobar_fade_in),
+                        AnimationUtils.loadAnimation(this, R.anim.undobar_fade_out)))
+                .message(message)
+                .listener(listener)
+                .show();
     }
 }
