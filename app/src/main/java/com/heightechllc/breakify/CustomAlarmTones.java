@@ -51,7 +51,7 @@ public class CustomAlarmTones {
      * @param context The context to use to retrieve the resources
      */
     public static void installToStorage(Context context) {
-        sContext = context;
+        sContext = context.getApplicationContext();
         new Thread(runnable).start();
     }
 
