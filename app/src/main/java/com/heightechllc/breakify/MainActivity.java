@@ -494,10 +494,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         undoStateBundle.putLong("remainingTime", circleTimer.getRemainingTime());
         undoStateBundle.putInt("workState", getWorkState());
 
-        // Set the new state
-        if (getWorkState() == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
-        else setWorkState(WORK_STATE_WORKING);
-
         String toastMessage;
 
         // Get duration from preferences, in minutes
@@ -510,6 +506,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
             toastMessage = "Break ";
         }
 
+        // Set the new state
+        if (getWorkState() == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
+        else setWorkState(WORK_STATE_WORKING);
+        
         startTimer(duration * 60000); // Multiply into milliseconds
 
         // Create and show the undo bar
