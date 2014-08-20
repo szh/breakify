@@ -17,14 +17,22 @@
 
 package com.heightechllc.breakify.tests;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.test.ActivityInstrumentationTestCase2;
+import android.test.suitebuilder.annotation.SmallTest;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.heightechllc.breakify.AlarmNotifications;
+import com.heightechllc.breakify.AlarmReceiver;
 import com.heightechllc.breakify.CircleTimerView;
 import com.heightechllc.breakify.MainActivity;
 import com.heightechllc.breakify.R;
@@ -44,22 +52,64 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
     protected void setUp() throws Exception {
         super.setUp();
 
-        // Clear the app's shared preferences
+        // Clear the app's shared preferences, and reset them to their defaults
         PreferenceManager.getDefaultSharedPreferences(getInstrumentation().getTargetContext())
                 .edit().clear().commit();
+        PreferenceManager.setDefaultValues(getInstrumentation().getTargetContext(),
+                R.xml.preferences, true);
 
         mMainActivity = getActivity();
         mCircleTimer = (CircleTimerView) mMainActivity.findViewById(R.id.circle_timer);
     }
 
+    @Override
+    protected void tearDown() throws Exception {
+        // Cancel the AlarmManager
+        Intent alarmIntent = new Intent(mMainActivity, AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(mMainActivity,
+                MainActivity.ALARM_MANAGER_REQUEST_CODE,
+                alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager alarmManager = (AlarmManager) mMainActivity.getSystemService(Context.ALARM_SERVICE);
+        alarmManager.cancel(pendingIntent);
+        // Hide the notification
+        AlarmNotifications.hideNotification(mMainActivity);
+
+        super.tearDown();
+    }
+
+    // Test that getWorkState() is always accurate
+
+    @SmallTest
+    public void test_workState_startsAsWorking() {
+        assertEquals(MainActivity.WORK_STATE_WORKING, MainActivity.getWorkState(mMainActivity));
+    }
+
+    @SmallTest
+    public void test_workState_staysAccurate() {
+        Button skipBtn = (Button) mMainActivity.findViewById(R.id.skip_btn);
+        ImageButton resetBtn = (ImageButton) mMainActivity.findViewById(R.id.reset_btn);
+
+        // Start the timer
+        clickView(mCircleTimer);
+        // Should still be "Working"
+        assertEquals(MainActivity.WORK_STATE_WORKING, MainActivity.getWorkState(mMainActivity));
+        // Skip to "Breaking"
+        clickView(skipBtn);
+        assertEquals(MainActivity.WORK_STATE_BREAKING, MainActivity.getWorkState(mMainActivity));
+        // Reset timer
+        clickView(resetBtn);
+        assertEquals(MainActivity.WORK_STATE_WORKING, MainActivity.getWorkState(mMainActivity));
+    }
 
     // Test that the start / stop label always gets updated
 
+    @SmallTest
     public void test_startStopLbl_showsStartTextBeforeStart() {
         TextView startStopLbl = (TextView) mMainActivity.findViewById(R.id.start_stop_lbl);
         assertEquals(mMainActivity.getString(R.string.start), startStopLbl.getText());
     }
 
+    @SmallTest
     public void test_startStopLbl_showsPauseTextWhileRunning() {
         TextView startStopLbl = (TextView) mMainActivity.findViewById(R.id.start_stop_lbl);
         // Start the timer
@@ -68,6 +118,7 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         assertEquals(mMainActivity.getString(R.string.stop), startStopLbl.getText());
     }
 
+    @SmallTest
     public void test_startStopLbl_showsResumeTextWhilePaused() {
         TextView startStopLbl = (TextView) mMainActivity.findViewById(R.id.start_stop_lbl);
         // Start the timer
@@ -78,6 +129,7 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         assertEquals(mMainActivity.getString(R.string.resume), startStopLbl.getText());
     }
 
+    @SmallTest
     public void test_startStopLbl_showsStartTextWhenReset() {
         TextView startStopLbl = (TextView) mMainActivity.findViewById(R.id.start_stop_lbl);
         ImageButton resetBtn = (ImageButton) mMainActivity.findViewById(R.id.reset_btn);
