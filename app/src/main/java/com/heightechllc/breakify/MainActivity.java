@@ -82,10 +82,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private int timerState = TIMER_STATE_STOPPED;
     private int _workState = WORK_STATE_WORKING;
 
-    // For restoring when user presses "Undo" in the undo bar
-    private long prevTotalTime, prevRemainingTime;
-    private int prevWorkState;
-
     private SharedPreferences sharedPref;
     private AlarmManager alarmManager;
 
@@ -493,9 +489,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
      */
     private void skipToNextState() {
         // Record the state we're about to skip from, in case the user chooses to undo
-        prevTotalTime = circleTimer.getTotalTime();
-        prevRemainingTime = circleTimer.getRemainingTime();
-        prevWorkState = getWorkState();
+        Bundle undoStateBundle = new Bundle();
+        undoStateBundle.putLong("totalTime", circleTimer.getTotalTime());
+        undoStateBundle.putLong("remainingTime", circleTimer.getRemainingTime());
+        undoStateBundle.putInt("workState", getWorkState());
 
         // Set the new state
         if (getWorkState() == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
@@ -517,9 +514,15 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         // Create and show the undo bar
         toastMessage += getString(R.string.skip_toast);
-        showUndoBar(toastMessage, new UndoBarController.UndoListener() {
+        showUndoBar(toastMessage, undoStateBundle, new UndoBarController.UndoListener() {
             @Override
             public void onUndo(Parcelable parcelable) {
+                // Extract the saved state from the Parcelable
+                Bundle undoStateBundle = (Bundle) parcelable;
+                long prevTotalTime = undoStateBundle.getLong("totalTime");
+                long prevRemainingTime = undoStateBundle.getLong("remainingTime");
+                int prevWorkState = undoStateBundle.getInt("workState");
+
                 // Cause startTimer() to treat it like we're resuming (b/c we are)
                 timerState = TIMER_STATE_PAUSED;
                 setWorkState(prevWorkState);
@@ -564,13 +567,15 @@ public class MainActivity extends Activity implements View.OnClickListener {
         timeLbl.setText("");
 
         // Record the state we're about to reset from, in case the user chooses to undo
+        Bundle undoStateBundle = new Bundle();
         if (isTimerComplete) {
-            prevTotalTime = prevRemainingTime = 0;
+            undoStateBundle.putLong("totalTime", 0);
+            undoStateBundle.putLong("remainingTime", 0);
         } else {
-            prevTotalTime = circleTimer.getTotalTime();
-            prevRemainingTime = circleTimer.getRemainingTime();
+            undoStateBundle.putLong("totalTime", circleTimer.getTotalTime());
+            undoStateBundle.putLong("remainingTime", circleTimer.getRemainingTime());
         }
-        prevWorkState = getWorkState();
+        undoStateBundle.putInt("workState", getWorkState());
 
         // Back to initial state
         setWorkState(WORK_STATE_WORKING);
@@ -586,9 +591,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
         sharedPref.edit().remove("schedTotalTime").remove("pausedTimeRemaining").apply();
 
         // Create and show the undo bar
-        showUndoBar(getString(R.string.reset_toast), new UndoBarController.UndoListener() {
+        showUndoBar(getString(R.string.reset_toast), undoStateBundle, new UndoBarController.UndoListener() {
             @Override
             public void onUndo(Parcelable parcelable) {
+                // Extract the saved state from the Parcelable
+                Bundle undoStateBundle = (Bundle) parcelable;
+                long prevTotalTime = undoStateBundle.getLong("totalTime");
+                long prevRemainingTime = undoStateBundle.getLong("remainingTime");
+                int prevWorkState = undoStateBundle.getInt("workState");
                 if (prevTotalTime > 0 && prevRemainingTime > 0) {
                     // Cause startTimer() to treat it like we're resuming (b/c we are)
                     timerState = TIMER_STATE_PAUSED;
@@ -656,15 +666,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
     /**
      * Shows an UndoBar with a duration of 3500ms and a style with fade animations
      * @param message The message to display on the toast
+     * @param token The Parcelable to be passed to the undo listener if the user pressed "Undo"
      * @param listener The UndoListener to be notified if the user presses "Undo"
      */
-    private void showUndoBar(String message, UndoBarController.UndoListener listener) {
+    private void showUndoBar(String message, Parcelable token,
+                             UndoBarController.UndoListener listener) {
         new UndoBarController.UndoBar(this)
                 .duration(3500)
                 .style(UndoBarController.UNDOSTYLE.setAnim( // Use base style with custom animations
                         AnimationUtils.loadAnimation(this, R.anim.undobar_fade_in),
                         AnimationUtils.loadAnimation(this, R.anim.undobar_fade_out)))
                 .message(message)
+                .token(token)
                 .listener(listener)
                 .show();
     }
