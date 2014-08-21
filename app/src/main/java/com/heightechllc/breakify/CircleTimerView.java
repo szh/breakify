@@ -75,11 +75,6 @@ public class CircleTimerView extends View implements View.OnTouchListener {
      */
     private int lastUpdatedSecond = -1;
 
-    /**
-     * The listener to notify when the user clicks the View
-     */
-    private OnClickListener clickListener;
-
     @SuppressWarnings("unused")
     public CircleTimerView(Context context) {
         this(context, null);
@@ -187,7 +182,7 @@ public class CircleTimerView extends View implements View.OnTouchListener {
     public boolean onTouch(View view, MotionEvent motionEvent) {
 
         // Store the current value of `pressed`
-        boolean pressedValue = pressed;
+        boolean wasPressed = pressed;
 
         // Check whether the user is pressing on the View
         switch (motionEvent.getActionMasked()) {
@@ -197,8 +192,8 @@ public class CircleTimerView extends View implements View.OnTouchListener {
             case MotionEvent.ACTION_UP:
                 if (pressed) { // Don't react if it wasn't pressed in the first place
                     pressed = false;
-                    // Notify the clickListener that the View has been clicked
-                    if (clickListener != null) clickListener.onClick(this);
+                    // Notify the OnClickListener that the View has been clicked
+                    performClick();
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -214,7 +209,7 @@ public class CircleTimerView extends View implements View.OnTouchListener {
         }
 
         // Redraw if the value of `pressed` has changed
-        if (pressedValue != pressed) invalidate();
+        if (wasPressed != pressed) invalidate();
 
         return true;
     }
@@ -281,16 +276,6 @@ public class CircleTimerView extends View implements View.OnTouchListener {
 
     public void setTimeDisplay(TextView lbl) {
         timeLbl = lbl;
-    }
-
-    @Override
-    public void setOnClickListener(OnClickListener l) {
-        clickListener = l;
-    }
-
-    @Override
-    public boolean hasOnClickListeners() {
-        return clickListener != null;
     }
 
     protected void drawRedDot(
