@@ -56,7 +56,13 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         PreferenceManager.getDefaultSharedPreferences(getInstrumentation().getTargetContext())
                 .edit().clear().commit();
         PreferenceManager.setDefaultValues(getInstrumentation().getTargetContext(),
-                R.xml.preferences, true);
+                R.xml.timer_durations_preferences, true);
+        PreferenceManager.setDefaultValues(getInstrumentation().getTargetContext(),
+                R.xml.alarm_preferences, true);
+        PreferenceManager.setDefaultValues(getInstrumentation().getTargetContext(),
+                R.xml.scheduled_start_preferences, true);
+        PreferenceManager.setDefaultValues(getInstrumentation().getTargetContext(),
+                R.xml.misc_preferences, true);
 
         mMainActivity = getActivity();
         mCircleTimer = (CircleTimerView) mMainActivity.findViewById(R.id.circle_timer);
