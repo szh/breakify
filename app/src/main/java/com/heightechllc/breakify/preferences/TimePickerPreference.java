@@ -75,6 +75,7 @@ public class TimePickerPreference extends DialogPreference {
     protected View onCreateDialogView() {
         // We don't need a layout xml file, just a simple TimePicker widget
         picker = new TimePicker(getContext());
+        picker.setIs24HourView(DateFormat.is24HourFormat(getContext()));
         return picker;
     }
 
