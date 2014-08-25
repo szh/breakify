@@ -21,6 +21,7 @@ import android.app.Fragment;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -71,8 +72,12 @@ public class DurationsDisplayFragment extends Fragment implements View.OnClickLi
         // Check if the user clicked the "Edit" button
         if (view.getId() != R.id.edit_btn) return;
 
-        // Show the settings activity
+        // Show the settings activity with the timer durations settings
         Intent intent = new Intent(getActivity(), SettingsActivity.class);
+        intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT,
+                TimerDurationsSettingsFragment.class.getName());
+        intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_TITLE,
+                R.string.pref_category_durations);
         startActivity(intent);
     }
 
