@@ -18,12 +18,8 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="android:Theme.Holo.Light.NoActionBar">
+    <style name="AppTheme" parent="android:Theme.Holo.Light">
         <!-- Customize your theme here. -->
-    </style>
-
-    <style name="AppTheme.Settings" parent="android:Theme.Holo.Light">
-        <!-- For SettingsActivity -->
     </style>
 
     <!-- Always use the KitKat theme for the UndoBar -->
