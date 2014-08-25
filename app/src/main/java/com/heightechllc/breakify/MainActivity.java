@@ -33,6 +33,9 @@ import android.os.Parcelable;
 import android.os.SystemClock;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -561,32 +564,27 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * Skips to the next timer state
      */
     private void skipToNextState() {
+        int oldWorkState = getWorkState();
         // Record the state we're about to skip from, in case the user chooses to undo
         Bundle undoStateBundle = new Bundle();
         undoStateBundle.putLong("totalTime", circleTimer.getTotalTime());
         undoStateBundle.putLong("remainingTime", circleTimer.getRemainingTime());
-        undoStateBundle.putInt("workState", getWorkState());
+        undoStateBundle.putInt("workState", oldWorkState);
 
-        String toastMessage;
-
+        String toastMessage = getString(R.string.skip_toast);
         // Get duration from preferences, in minutes
         long duration;
-        if (getWorkState() == WORK_STATE_WORKING) {
-            duration = sharedPref.getInt(TimerDurationsSettingsFragment.KEY_WORK_DURATION, 0);
-            toastMessage = "Work ";
-        } else {
+        if (oldWorkState == WORK_STATE_WORKING) {
+            // Means we're skipping to break
             duration = sharedPref.getInt(TimerDurationsSettingsFragment.KEY_BREAK_DURATION, 0);
-            toastMessage = "Break ";
+            toastMessage += " break";
+        } else {
+            // Means we're skipping to work
+            duration = sharedPref.getInt(TimerDurationsSettingsFragment.KEY_WORK_DURATION, 0);
+            toastMessage += " work";
         }
 
-        // Set the new state
-        if (getWorkState() == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
-        else setWorkState(WORK_STATE_WORKING);
-
-        startTimer(duration * 60000); // Multiply into milliseconds
-
         // Create and show the undo bar
-        toastMessage += getString(R.string.skip_toast);
         showUndoBar(toastMessage, undoStateBundle, new UndoBarController.UndoListener() {
             @Override
             public void onUndo(Parcelable parcelable) {
@@ -610,6 +608,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 if (mixpanel != null) mixpanel.track("Skip undone", null);
             }
         });
+
+        // Set the new state
+        if (oldWorkState == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
+        else setWorkState(WORK_STATE_WORKING);
+
+        startTimer(duration * 60000); // Multiply into milliseconds
 
         // Analytics
         if (mixpanel != null) {

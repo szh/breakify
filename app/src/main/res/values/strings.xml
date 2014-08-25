@@ -33,7 +33,7 @@
     <string name="snooze">Snooze</string>
     <string name="cancel">Cancel</string>
     <string name="skip">Skip</string>
-    <string name="skip_toast">skipped</string>
+    <string name="skip_toast">Skipped to</string>
 
     <!-- Scheduled start -->
     <string name="scheduled_dialog_title">Scheduled Start</string>
