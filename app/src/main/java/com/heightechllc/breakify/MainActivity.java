@@ -19,9 +19,11 @@ package com.heightechllc.breakify;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -29,6 +31,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.os.SystemClock;
+import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.animation.Animation;
@@ -38,6 +41,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.cocosw.undobar.UndoBarController;
+import com.heightechllc.breakify.preferences.ScheduledStartSettingsFragment;
+import com.heightechllc.breakify.preferences.SettingsActivity;
 import com.heightechllc.breakify.preferences.SettingsFragment;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
@@ -56,6 +61,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public static MixpanelAPI mixpanel;
 
     /**
+     * Extra to inform the Activity that it is being opened automatically by ScheduledStartReceiver.
+     * FLAG_ACTIVITY_NO_USER_ACTION should also be set on the intent when using this extra.
+     */
+    public static final String EXTRA_SCHEDULED_START = "com.heightechllc.breakify.ScheduledStart";
+    /**
      * Extra to instruct the Activity to open the RingingActivity. If FLAG_ACTIVITY_NO_USER_ACTION
      * is set on the Intent, the alarm will begin ringing as well.
      */
@@ -66,6 +76,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
      */
     public static final String EXTRA_SNOOZE = "com.heightechllc.breakify.Snooze";
 
+    /**
+     * The request code for the PendingIntent to ring the timer
+     */
     public static final int ALARM_MANAGER_REQUEST_CODE = 613;
 
     // Timer states
@@ -260,6 +273,43 @@ public class MainActivity extends Activity implements View.OnClickListener {
             startActivityForResult(ringingIntent, RingingActivity.REQUEST_ALARM_RING);
 
             consumed = true;
+        } else if (intent.getBooleanExtra(EXTRA_SCHEDULED_START, false)) {
+            // The Activity was launched from ScheduledStartReceiver, meaning it's time for the
+            //  scheduled start
+
+            // Show a dialog prompting the user to start
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.scheduled_dialog_title)
+                    .setMessage(R.string.scheduled_dialog_message)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            // Start the timer
+                            circleTimer.performClick();
+                        }
+                    })
+                    .setNeutralButton(R.string.action_settings,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    // Show the settings activity with the Scheduled Start settings
+                                    Intent intent = new Intent(MainActivity.this,
+                                            SettingsActivity.class);
+                                    intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT,
+                                            ScheduledStartSettingsFragment.class.getName());
+                                    intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_TITLE,
+                                            R.string.pref_category_scheduled);
+                                    startActivity(intent);
+                                }
+                            })
+                    .setNegativeButton(R.string.cancel, null)
+                    .show();
+
+            // We want to go ahead and restore the saved timer state, so we need to return `false`.
+            // There won't be a running timer to restore, since ScheduledStartReceiver only opens
+            //  the MainActivity if the timer isn't running, but there still may be a paused timer
+            //  to restore.
+            consumed = false;
         }
 
         return consumed;
@@ -509,7 +559,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // Set the new state
         if (getWorkState() == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
         else setWorkState(WORK_STATE_WORKING);
-        
+
         startTimer(duration * 60000); // Multiply into milliseconds
 
         // Create and show the undo bar

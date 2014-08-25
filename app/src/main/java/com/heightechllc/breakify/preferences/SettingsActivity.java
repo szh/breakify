@@ -17,22 +17,31 @@
 
 package com.heightechllc.breakify.preferences;
 
-import android.app.Activity;
-import android.os.Bundle;
+import android.preference.PreferenceActivity;
+
+import java.util.List;
 
 /**
- * The activity that displays the user preferences, using {@link SettingsFragment}
+ * The activity that displays the user preferences
  */
-public class SettingsActivity extends Activity {
+public class SettingsActivity extends PreferenceActivity {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onBuildHeaders(List<Header> target) {
+        super.onBuildHeaders(target);
 
-        // Show the SettingsFragment
+        // This method only gets called when no sub-preference fragment will be displayed - i.e.
+        //  when the Activity is first opened (unless a specific sub-preference fragment was
+        //  specified in the Intent)
+
+        // Show the initial SettingsFragment
         getFragmentManager().beginTransaction()
                 .replace(android.R.id.content, new SettingsFragment())
                 .commit();
     }
 
+    @Override
+    protected boolean isValidFragment(String fragmentName) {
+        return fragmentName.equals(ScheduledStartSettingsFragment.class.getName());
+    }
 }

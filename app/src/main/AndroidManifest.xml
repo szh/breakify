@@ -58,6 +58,9 @@
             android:name=".AlarmReceiver"
             android:enabled="true" />
         <receiver
+            android:name=".ScheduledStartReceiver"
+            android:enabled="true" />
+        <receiver
             android:name=".BootReceiver"
             android:enabled="false">
             <intent-filter>

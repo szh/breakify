@@ -17,7 +17,6 @@
 
 package com.heightechllc.breakify.preferences;
 
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -35,9 +34,10 @@ import com.heightechllc.breakify.R;
 
 
 /**
- * Fragment for user preferences. Subclass of {@link PreferenceFragment}
+ * Fragment for user preferences. Subclass of {@link PreferenceFragment}.
  */
-public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class SettingsFragment extends PreferenceFragment implements
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
     // Settings keys
     public static final String KEY_WORK_DURATION = "pref_key_work_duration";
@@ -100,6 +100,8 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
         getPreferenceScreen().getSharedPreferences().
                 registerOnSharedPreferenceChangeListener(this);
+
+        updateScheduledPrefSummary();
     }
 
     @Override
@@ -167,6 +169,14 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
         // Update the summary
         findPreference(KEY_RINGTONE).setSummary(title);
+    }
+
+    /**
+     * Updates the summary of the "Scheduled Start" preference category
+     */
+    private void updateScheduledPrefSummary() {
+        findPreference(ScheduledStartSettingsFragment.KEY_CATEGORY_SCHEDULED)
+                .setSummary(ScheduledStartSettingsFragment.getSummary(getActivity()));
     }
 
 }

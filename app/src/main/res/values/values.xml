@@ -25,6 +25,17 @@
     <integer name="max_break_duration">300</integer>
     <integer name="max_snooze_duration">300</integer>
 
+    <string name="default_scheduled_start_time">9:00</string>
+    <!-- People in different locales work on different days -->
+    <bool name="default_scheduled_monday">true</bool>
+    <bool name="default_scheduled_tuesday">true</bool>
+    <bool name="default_scheduled_wednesday">true</bool>
+    <bool name="default_scheduled_thursday">true</bool>
+    <bool name="default_scheduled_friday">true</bool>
+    <!-- In the US people generally don't work on Saturday or Sunday -->
+    <bool name="default_scheduled_sunday">false</bool>
+    <bool name="default_scheduled_saturday">false</bool>
+
     <string name="default_ringtone_path">content://settings/system/alarm_alert</string>
     <bool name="default_vibrate">true</bool>
 

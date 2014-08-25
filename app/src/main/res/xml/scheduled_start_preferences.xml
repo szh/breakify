@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Copyright (C) 2014  Shlomo Zalman Heigh
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ -->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/pref_category_scheduled">
+    <com.heightechllc.breakify.preferences.TimePickerPreference
+        android:key="pref_key_scheduled_start_time"
+        android:title="@string/pref_scheduled_start_time"
+        android:defaultValue="@string/default_scheduled_start_time" />
+    <!-- TODO: Use MultiSelectListPreference instead? -->
+    <PreferenceCategory
+        android:title="@string/pref_scheduled_days">
+        <CheckBoxPreference
+            android:key="pref_key_scheduled_days_sunday"
+            android:title="@string/pref_scheduled_days_sunday"
+            android:defaultValue="@bool/default_scheduled_sunday" />
+        <CheckBoxPreference
+            android:key="pref_key_scheduled_days_monday"
+            android:title="@string/pref_scheduled_days_monday"
+            android:defaultValue="@bool/default_scheduled_monday" />
+        <CheckBoxPreference
+            android:key="pref_key_scheduled_days_tuesday"
+            android:title="@string/pref_scheduled_days_tuesday"
+            android:defaultValue="@bool/default_scheduled_tuesday" />
+        <CheckBoxPreference
+            android:key="pref_key_scheduled_days_wednesday"
+            android:title="@string/pref_scheduled_days_wednesday"
+            android:defaultValue="@bool/default_scheduled_wednesday" />
+        <CheckBoxPreference
+            android:key="pref_key_scheduled_days_thursday"
+            android:title="@string/pref_scheduled_days_thursday"
+            android:defaultValue="@bool/default_scheduled_thursday" />
+        <CheckBoxPreference
+            android:key="pref_key_scheduled_days_friday"
+            android:title="@string/pref_scheduled_days_friday"
+            android:defaultValue="@bool/default_scheduled_friday" />
+        <CheckBoxPreference
+            android:key="pref_key_scheduled_days_saturday"
+            android:title="@string/pref_scheduled_days_saturday"
+            android:defaultValue="@bool/default_scheduled_saturday" />
+    </PreferenceCategory>
+</PreferenceScreen>

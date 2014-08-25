@@ -81,5 +81,9 @@ public class BootReceiver extends BroadcastReceiver {
                     sharedPref.getInt("workState", MainActivity.WORK_STATE_WORKING)
             );
         }
+
+
+        // Now reschedule the Scheduled Start
+        ScheduledStart.schedule(context);
     }
 }

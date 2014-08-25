@@ -20,6 +20,7 @@ package com.heightechllc.breakify.preferences;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.preference.DialogPreference;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.NumberPicker;
@@ -67,7 +68,7 @@ public class NumberPickerPreference extends DialogPreference {
     }
 
     @Override
-    protected void onBindDialogView(View view) {
+    protected void onBindDialogView(@NonNull View view) {
         super.onBindDialogView(view);
 
         // Set the number picker's values
@@ -89,9 +90,10 @@ public class NumberPickerPreference extends DialogPreference {
         super.onDialogClosed(positiveResult);
 
         if (positiveResult) {
+            picker.clearFocus();
             // User clicked "OK", so save the current selection
-            if (callChangeListener(picker.getValue())) {
-                value = picker.getValue();
+            value = picker.getValue();
+            if (callChangeListener(value)) {
                 persistInt(value);
             }
         }
@@ -105,7 +107,7 @@ public class NumberPickerPreference extends DialogPreference {
             value = getPersistedInt(FALLBACK_DEFAULT);
         } else {
             value = ((Integer) defaultValue);
-            persistInt(value);
+            if (shouldPersist()) persistInt(value);
         }
     }
 

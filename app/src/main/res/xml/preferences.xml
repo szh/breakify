@@ -20,25 +20,32 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- TODO: Use headers -->
+
+    <PreferenceScreen
+        android:key="pref_key_category_scheduled"
+        android:title="@string/pref_category_scheduled"
+        android:fragment="com.heightechllc.breakify.preferences.ScheduledStartSettingsFragment" />
+
     <PreferenceCategory
         android:title="@string/pref_category_durations">
         <com.heightechllc.breakify.preferences.NumberPickerPreference
             android:key="pref_key_work_duration"
-            android:title="@string/pref_work_duration_title"
+            android:title="@string/pref_work_duration"
             android:defaultValue="@integer/default_work_duration"
             app:maxValue="@integer/max_work_duration"
             app:minValue="1"
             app:minutes="true" />
         <com.heightechllc.breakify.preferences.NumberPickerPreference
             android:key="pref_key_break_duration"
-            android:title="@string/pref_break_duration_title"
+            android:title="@string/pref_break_duration"
             android:defaultValue="@integer/default_break_duration"
             app:maxValue="@integer/max_break_duration"
             app:minValue="1"
             app:minutes="true" />
         <com.heightechllc.breakify.preferences.NumberPickerPreference
             android:key="pref_key_snooze_duration"
-            android:title="@string/pref_snooze_duration_title"
+            android:title="@string/pref_snooze_duration"
             android:defaultValue="@integer/default_snooze_duration"
             app:maxValue="@integer/max_snooze_duration"
             app:minValue="1"
@@ -68,7 +75,7 @@
         android:title="@string/pref_category_misc">
         <CheckBoxPreference
             android:key="pref_key_analytics_enabled"
-            android:title="@string/pref_analytics_enabled_title"
+            android:title="@string/pref_analytics_enabled"
             android:summary="@string/pref_analytics_enabled_summary"
             android:defaultValue="@bool/default_analytics_enabled" />
     </PreferenceCategory>
