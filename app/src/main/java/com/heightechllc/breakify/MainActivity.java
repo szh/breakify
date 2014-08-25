@@ -41,9 +41,10 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.cocosw.undobar.UndoBarController;
+import com.heightechllc.breakify.preferences.MiscSettingsFragment;
 import com.heightechllc.breakify.preferences.ScheduledStartSettingsFragment;
 import com.heightechllc.breakify.preferences.SettingsActivity;
-import com.heightechllc.breakify.preferences.SettingsFragment;
+import com.heightechllc.breakify.preferences.TimerDurationsSettingsFragment;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import org.json.JSONException;
@@ -90,7 +91,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public static final int WORK_STATE_WORKING = 1;
     public static final int WORK_STATE_BREAKING = 2;
 
-    private final String tag = "MainActivity";
+    private static final String tag = "MainActivity";
 
     private int timerState = TIMER_STATE_STOPPED;
     private int _workState = WORK_STATE_WORKING;
@@ -109,7 +110,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
 
         // Set up the default values for the preferences
-        PreferenceManager.setDefaultValues(getApplicationContext(), R.xml.preferences, false);
+        PreferenceManager.setDefaultValues(this, R.xml.timer_durations_preferences, false);
+        PreferenceManager.setDefaultValues(this, R.xml.alarm_preferences, false);
+        PreferenceManager.setDefaultValues(this, R.xml.scheduled_start_preferences, false);
+        PreferenceManager.setDefaultValues(this, R.xml.misc_preferences, false);
 
         setContentView(R.layout.activity_main);
 
@@ -137,7 +141,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
         // Check if analytics are enabled in preferences
-        if (sharedPref.getBoolean(SettingsFragment.KEY_ANALYTICS_ENABLED, false))
+        if (sharedPref.getBoolean(MiscSettingsFragment.KEY_ANALYTICS_ENABLED, false))
             mixpanel = MixpanelAPI.getInstance(this, "d78a075fc861c288e24664a8905a6698");
 
         // Handle the intent. Returns `true` if an action was taken, e.g. the RingingActivity was
@@ -448,9 +452,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         } else {
             // Get duration from preferences, in minutes
             if (getWorkState() == WORK_STATE_WORKING) {
-                duration = sharedPref.getInt(SettingsFragment.KEY_WORK_DURATION, 0);
+                duration = sharedPref.getInt(TimerDurationsSettingsFragment.KEY_WORK_DURATION, 0);
             } else {
-                duration = sharedPref.getInt(SettingsFragment.KEY_BREAK_DURATION, 0);
+                duration = sharedPref.getInt(TimerDurationsSettingsFragment.KEY_BREAK_DURATION, 0);
             }
 
             // Analytics
@@ -515,7 +519,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void snoozeTimer() {
         setWorkState(sharedPref.getInt("workState", WORK_STATE_WORKING)); // Restore the timer state
         // Get duration from preferences, in minutes
-        int snoozeDuration = sharedPref.getInt(SettingsFragment.KEY_SNOOZE_DURATION, 0);
+        int snoozeDuration = sharedPref.getInt(TimerDurationsSettingsFragment.KEY_SNOOZE_DURATION, 0);
         // Snooze the timer. startTimer() also shows the upcoming notification, which will
         //  automatically hide the ringing notification, so we don't need to do it manually
         startTimer(snoozeDuration * 60000); // Multiply into milliseconds
@@ -549,10 +553,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // Get duration from preferences, in minutes
         long duration;
         if (getWorkState() == WORK_STATE_WORKING) {
-            duration = sharedPref.getInt(SettingsFragment.KEY_WORK_DURATION, 0);
+            duration = sharedPref.getInt(TimerDurationsSettingsFragment.KEY_WORK_DURATION, 0);
             toastMessage = "Work ";
         } else {
-            duration = sharedPref.getInt(SettingsFragment.KEY_BREAK_DURATION, 0);
+            duration = sharedPref.getInt(TimerDurationsSettingsFragment.KEY_BREAK_DURATION, 0);
             toastMessage = "Break ";
         }
 

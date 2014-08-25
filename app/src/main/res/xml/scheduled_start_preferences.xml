@@ -18,10 +18,12 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:title="@string/pref_category_scheduled">
+
     <com.heightechllc.breakify.preferences.TimePickerPreference
         android:key="pref_key_scheduled_start_time"
         android:title="@string/pref_scheduled_start_time"
         android:defaultValue="@string/default_scheduled_start_time" />
+
     <!-- TODO: Use MultiSelectListPreference instead? -->
     <PreferenceCategory
         android:title="@string/pref_scheduled_days">
@@ -54,4 +56,5 @@
             android:title="@string/pref_scheduled_days_saturday"
             android:defaultValue="@bool/default_scheduled_saturday" />
     </PreferenceCategory>
+
 </PreferenceScreen>

@@ -29,7 +29,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import com.heightechllc.breakify.preferences.SettingsFragment;
+import com.heightechllc.breakify.preferences.AlarmSettingsFragment;
 
 import java.io.IOException;
 
@@ -98,11 +98,11 @@ public class AlarmRinger {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         // Check which ringtone is set in preferences
-        String alarmUriStr = sharedPrefs.getString(SettingsFragment.KEY_RINGTONE, "");
+        String alarmUriStr = sharedPrefs.getString(AlarmSettingsFragment.KEY_RINGTONE, "");
         // Check if the ringtone is "None" (an empty string), or if the volume is 0
         boolean ring = !alarmUriStr.isEmpty() && audioManager.getStreamVolume(STREAM_TYPE) > 0;
         // Check if vibration is enabled in preferences
-        boolean vibrate = sharedPrefs.getBoolean(SettingsFragment.KEY_VIBRATE, false);
+        boolean vibrate = sharedPrefs.getBoolean(AlarmSettingsFragment.KEY_VIBRATE, false);
 
         if (ring || vibrate) started = true; // Only set `started` if we'll actually do something
 

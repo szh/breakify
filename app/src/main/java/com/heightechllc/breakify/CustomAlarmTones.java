@@ -27,7 +27,7 @@ import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.Log;
 
-import com.heightechllc.breakify.preferences.SettingsFragment;
+import com.heightechllc.breakify.preferences.AlarmSettingsFragment;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -160,10 +160,10 @@ public class CustomAlarmTones {
                     editor.putString(PREF_KEY_RINGTONE_DEFAULT, newUri.toString());
 
                     // Check if the ringtone preference is currently set to "default"
-                    if (sharedPrefs.getString(SettingsFragment.KEY_RINGTONE, "")
+                    if (sharedPrefs.getString(AlarmSettingsFragment.KEY_RINGTONE, "")
                             .equals(sContext.getString(R.string.default_ringtone_path))) {
                         // Set this as the ringtone, since it's the new default
-                        editor.putString(SettingsFragment.KEY_RINGTONE, newUri.toString());
+                        editor.putString(AlarmSettingsFragment.KEY_RINGTONE, newUri.toString());
                     }
 
                     editor.apply();

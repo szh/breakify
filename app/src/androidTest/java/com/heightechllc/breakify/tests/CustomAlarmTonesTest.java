@@ -25,7 +25,7 @@ import android.test.suitebuilder.annotation.LargeTest;
 
 import com.heightechllc.breakify.CustomAlarmTones;
 import com.heightechllc.breakify.R;
-import com.heightechllc.breakify.preferences.SettingsFragment;
+import com.heightechllc.breakify.preferences.AlarmSettingsFragment;
 
 import java.io.File;
 
@@ -75,27 +75,27 @@ public class CustomAlarmTonesTest extends AndroidTestCase {
 
     public void test_overridesDefaultAlarmTone() {
         // Set the ringtone preference to the default
-        mSharedPrefs.edit().putString(SettingsFragment.KEY_RINGTONE,
+        mSharedPrefs.edit().putString(AlarmSettingsFragment.KEY_RINGTONE,
                 getContext().getString(R.string.default_ringtone_path)).commit();
 
         installAlarmTones();
 
         // Check if the pref was overridden
         assertEquals(mSharedPrefs.getString(CustomAlarmTones.PREF_KEY_RINGTONE_DEFAULT, ""),
-                mSharedPrefs.getString(SettingsFragment.KEY_RINGTONE, ""));
+                mSharedPrefs.getString(AlarmSettingsFragment.KEY_RINGTONE, ""));
     }
 
     public void test_doesNotOverrideNonDefaultAlarmTone() {
         // Set the ringtone preference to something other than the default
         mSharedPrefs.edit()
-                .putString(SettingsFragment.KEY_RINGTONE, "something_other_than_default")
+                .putString(AlarmSettingsFragment.KEY_RINGTONE, "something_other_than_default")
                 .commit();
 
         installAlarmTones();
 
         // Make sure the ringtone pref wasn't changed
         assertEquals("something_other_than_default",
-                mSharedPrefs.getString(SettingsFragment.KEY_RINGTONE, ""));
+                mSharedPrefs.getString(AlarmSettingsFragment.KEY_RINGTONE, ""));
     }
 
     public void test_handlesFilesAlreadyExist() {

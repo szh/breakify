@@ -17,7 +17,11 @@
 
 package com.heightechllc.breakify.preferences;
 
+import android.os.Bundle;
 import android.preference.PreferenceActivity;
+
+import com.heightechllc.breakify.AlarmRinger;
+import com.heightechllc.breakify.R;
 
 import java.util.List;
 
@@ -27,21 +31,24 @@ import java.util.List;
 public class SettingsActivity extends PreferenceActivity {
 
     @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // If the user presses the device's volume keys, we want to adjust the alarm volume
+        setVolumeControlStream(AlarmRinger.STREAM_TYPE);
+    }
+
+    @Override
     public void onBuildHeaders(List<Header> target) {
-        super.onBuildHeaders(target);
-
-        // This method only gets called when no sub-preference fragment will be displayed - i.e.
-        //  when the Activity is first opened (unless a specific sub-preference fragment was
-        //  specified in the Intent)
-
-        // Show the initial SettingsFragment
-        getFragmentManager().beginTransaction()
-                .replace(android.R.id.content, new SettingsFragment())
-                .commit();
+        loadHeadersFromResource(R.xml.preference_headers, target);
     }
 
     @Override
     protected boolean isValidFragment(String fragmentName) {
-        return fragmentName.equals(ScheduledStartSettingsFragment.class.getName());
+        // Check if the fragment matches any of the known PreferenceFragments in the app
+        return fragmentName.equals(TimerDurationsSettingsFragment.class.getName()) ||
+                fragmentName.equals(AlarmSettingsFragment.class.getName()) ||
+                fragmentName.equals(ScheduledStartSettingsFragment.class.getName()) ||
+                fragmentName.equals(MiscSettingsFragment.class.getName());
     }
 }

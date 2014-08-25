@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Copyright (C) 2014  Shlomo Zalman Heigh
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ -->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:title="@string/pref_category_alarm">
+
+    <RingtonePreference
+        android:key="pref_key_ringtone"
+        android:title="@string/pref_ringtone"
+        android:defaultValue="@string/default_ringtone_path"
+        android:ringtoneType="alarm"
+        android:showDefault="true"
+        android:showSilent="true" />
+    <!-- Volume preference is handled in code. Just shows the system's volume controls. -->
+    <Preference
+        android:key="pref_key_volume"
+        android:title="@string/pref_volume" />
+    <CheckBoxPreference
+        android:key="pref_key_vibrate"
+        android:title="@string/pref_vibrate"
+        android:defaultValue="@bool/default_vibrate" />
+
+</PreferenceScreen>

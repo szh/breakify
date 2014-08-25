@@ -29,7 +29,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.heightechllc.breakify.preferences.SettingsActivity;
-import com.heightechllc.breakify.preferences.SettingsFragment;
+import com.heightechllc.breakify.preferences.TimerDurationsSettingsFragment;
 
 /**
  * Fragment for displaying the current settings for the work and break durations
@@ -88,8 +88,8 @@ public class DurationsDisplayFragment extends Fragment implements View.OnClickLi
         int workNum, breakNum;
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        workNum = prefs.getInt(SettingsFragment.KEY_WORK_DURATION, 0);
-        breakNum = prefs.getInt(SettingsFragment.KEY_BREAK_DURATION, 0);
+        workNum = prefs.getInt(TimerDurationsSettingsFragment.KEY_WORK_DURATION, 0);
+        breakNum = prefs.getInt(TimerDurationsSettingsFragment.KEY_BREAK_DURATION, 0);
 
         // Construct the text for each value: the int + 'minutes' - e.g., "90 minutes"
         String mins = getResources().getString(R.string.minutes);

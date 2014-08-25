@@ -31,8 +31,7 @@ import com.heightechllc.breakify.R;
 import com.heightechllc.breakify.ScheduledStart;
 
 /**
- * Fragment for the preferences regarding the Scheduled Start feature.
- * Subclass of {@link PreferenceFragment}.
+ * Fragment for user preferences relating to the Scheduled Start feature.
  */
 public class ScheduledStartSettingsFragment extends PreferenceFragment implements
         SharedPreferences.OnSharedPreferenceChangeListener
