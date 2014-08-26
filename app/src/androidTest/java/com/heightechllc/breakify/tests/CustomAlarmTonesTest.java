@@ -39,7 +39,6 @@ public class CustomAlarmTonesTest extends AndroidTestCase {
     private File mFile2;
     private SharedPreferences mSharedPrefs;
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public void setUp() throws Exception {
         super.setUp();
@@ -55,8 +54,14 @@ public class CustomAlarmTonesTest extends AndroidTestCase {
 
         mFile1 = new File(path, filename1);
         mFile2 = new File(path, filename2);
+    }
 
-        // Delete the files if they already exist
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+
+        // Delete the files
         mFile1.delete();
         mFile2.delete();
     }
