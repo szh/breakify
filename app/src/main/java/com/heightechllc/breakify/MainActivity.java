@@ -588,6 +588,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         showUndoBar(toastMessage, undoStateBundle, new UndoBarController.UndoListener() {
             @Override
             public void onUndo(Parcelable parcelable) {
+                if (parcelable == null) return;
+
                 // Extract the saved state from the Parcelable
                 Bundle undoStateBundle = (Bundle) parcelable;
                 long prevTotalTime = undoStateBundle.getLong("totalTime");
@@ -671,6 +673,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         showUndoBar(getString(R.string.reset_toast), undoStateBundle, new UndoBarController.UndoListener() {
             @Override
             public void onUndo(Parcelable parcelable) {
+                if (parcelable == null) return;
+
                 // Extract the saved state from the Parcelable
                 Bundle undoStateBundle = (Bundle) parcelable;
                 long prevTotalTime = undoStateBundle.getLong("totalTime");
