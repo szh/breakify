@@ -22,6 +22,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -132,7 +133,7 @@ public class RingingActivity extends Activity implements View.OnClickListener {
     }
 
     @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
+    public boolean onKeyUp(int keyCode, @NonNull KeyEvent event) {
         // Stop the alarm immediately if the user presses any of the hardware keys.
         // Main use case is if the user forgets to turn off alarm, and it rings in a meeting. User
         //  should be able to mute instantly by pressing volume (or other) keys.
