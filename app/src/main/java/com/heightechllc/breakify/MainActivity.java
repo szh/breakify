@@ -147,11 +147,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (sharedPref.getBoolean(MiscSettingsFragment.KEY_ANALYTICS_ENABLED, false))
             mixpanel = MixpanelAPI.getInstance(this, "d78a075fc861c288e24664a8905a6698");
 
-        // Handle the intent. Returns `true` if an action was taken, e.g. the RingingActivity was
-        //  opened or the alarm was snoozed (see the 'extras' above), in which case we don't want
-        //  to try to resume a saved alarm (since it already rang).
-        if (!handleIntent(getIntent())) {
-            // No action was taken on the intent, so check if an alarm is saved
+        // Handle the intent
+        boolean shouldRestoreSavedTimer = handleIntent(getIntent());
+
+        if (shouldRestoreSavedTimer) {
+            // Restore saved timer state
             restoreSavedTimer();
         }
 
@@ -244,6 +244,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (requestCode != RingingActivity.REQUEST_ALARM_RING)
             return; // We didn't request it and we don't know what to do with the result
 
+        // Restore the work state from preferences, since `restoreSavedTimer()` wasn't called
+        setWorkState(sharedPref.getInt("workState", _workState));
+
         switch (resultCode) {
             case RingingActivity.RESULT_ALARM_RING_OK:
                 // Set the new state
@@ -274,10 +277,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
     /**
      * Handles a new intent, either from onNewIntent() or onCreate()
      * @param intent The intent to handle
-     * @return Whether the intent was consumed (i.e. an action was taken, as instructed by an extra)
+     * @return Whether we should attempt to restore the saved timer state. Will be false when
+     *  this method opens another Activity.
      */
     private boolean handleIntent(Intent intent) {
-        boolean consumed = false;
+        boolean shouldRestoreSavedTimer = true;
 
         if (intent.getBooleanExtra(EXTRA_SNOOZE, false)) {
             // The activity was launched from the expanded notification's "Snooze" action
@@ -287,7 +291,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
             //  from the notification
             AlarmRinger.stop(this);
 
-            consumed = true;
+            // Don't restore, since we're about to open a new Activity
+            shouldRestoreSavedTimer = false;
+
         } else if (intent.getBooleanExtra(EXTRA_ALARM_RING, false)) {
             // The Activity was launched from AlarmReceiver, meaning the timer finished and we
             //  need to ring the alarm
@@ -298,7 +304,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 ringingIntent.setFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
             startActivityForResult(ringingIntent, RingingActivity.REQUEST_ALARM_RING);
 
-            consumed = true;
+            // Don't restore, since we're about to open a new Activity
+            shouldRestoreSavedTimer = false;
+
         } else if (intent.getBooleanExtra(EXTRA_SCHEDULED_START, false)) {
             // The Activity was launched from ScheduledStartReceiver, meaning it's time for the
             //  scheduled start
@@ -330,15 +338,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             })
                     .setNegativeButton(R.string.cancel, null)
                     .show();
-
-            // We want to go ahead and restore the saved timer state, so we need to return `false`.
-            // There won't be a running timer to restore, since ScheduledStartReceiver only opens
-            //  the MainActivity if the timer isn't running, but there still may be a paused timer
-            //  to restore.
-            consumed = false;
         }
 
-        return consumed;
+        return shouldRestoreSavedTimer;
     }
 
     /**
