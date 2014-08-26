@@ -22,3 +22,7 @@ Send me a pull request on Github.
 License
 ---
 GNU GPL v3.0, see LICENSE.txt
+
+Screenshot
+---
+![Screenshot](screenshot.png "Screenshot")
