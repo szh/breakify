@@ -6,14 +6,25 @@ Why?
 ---
 Because I notice that I'm constantly getting caught up writing code and doing other great things, and I forget to take breaks. That's not too healthy, and I also find that I'm _more productive_ after I take a quick break.
 
+Features
+---
+- One click to start timer
+- In the middle of something and can't stop just yet? No problem, just tap "Snooze"
+- Reached a good place to take a break? Easily skip to your break, or vice versa
+- Comes with 2 custom alarm tones
+- Scheduled Start - opens automatically, so you don't have to remember to (enable in Settings)
+- Privacy conscious? You can disable analytics in Settings
+
 Todo
 ---
-A lot... This is alpha code.
-First of all, we need more tests. Also still missing lots of other features that I'd like to add. I'm writing this as a fun side project, so I'll get to things whenever I do. If you want to help out though, you're more than welcome to. Keep reading below for instructions.
+First of all, we need more tests.
+Second, it would be nice to save statistics and show graphs of how much working v.s. breaking the user is getting in.
+I'm writing this as a fun side project, so I'll get to things whenever I do. If you want to help out though, you're more than welcome to. Keep reading below for instructions.
 
 Building and Running
 ---
-Just clone this repository and build it in Android Studio. To run the tests on a device or simulator, `cd` into the directory and run `./gradlew connectedAndroidTest`, or you can just use Android Studio and run the project with the "Android Tests" run configuration.
+Just clone this repository and build it in Android Studio, or run `./gradlew assembleDebug` or `./gradlew assembleRelease`.
+To run the tests on a device or simulator, run `./gradlew connectedAndroidTest`, or you can just use Android Studio and run the project with the "Android Tests" run configuration.
 
 Contributing
 ---
