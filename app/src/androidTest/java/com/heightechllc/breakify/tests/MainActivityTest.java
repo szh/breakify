@@ -129,7 +129,7 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         getPrefs().edit().putInt("workState", MainActivity.WORK_STATE_BREAKING).apply();
 
         // Now recreate the Activity
-        getActivity();
+        mMainActivity = getActivity();
 
         // Since we weren't restoring a timer, the state should still be the default, "Working"
 
@@ -149,7 +149,7 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
 
         // Now destroy and recreate the Activity
         mMainActivity.finish();
-        getActivity();
+        mMainActivity = getActivity();
 
         // Since we are restoring a timer, the state should be "Breaking".
 
