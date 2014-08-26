@@ -51,7 +51,8 @@ public class RingingActivity extends Activity implements View.OnClickListener {
 
         // Set label text
         TextView promptLbl = (TextView) findViewById(R.id.promptLbl);
-        if (MainActivity.getWorkState(this) == MainActivity.WORK_STATE_WORKING)
+        int workState = MainActivity.getWorkState(this);
+        if (workState == MainActivity.WORK_STATE_WORKING)
             promptLbl.setText(R.string.start_break_prompt);
         else
             promptLbl.setText(R.string.start_work_prompt);
@@ -66,7 +67,7 @@ public class RingingActivity extends Activity implements View.OnClickListener {
         cancelBtn.setOnClickListener(this);
 
         // Show ring notification (overwrites the persistent notification)
-        AlarmNotifications.showRingNotification(this, MainActivity.getWorkState(this));
+        AlarmNotifications.showRingNotification(this, workState);
 
         // Check if the activity was created from the AlarmReceiver, i.e., from the AlarmManager
         //  going off, in which case we want to ring / vibrate to get the user's attention; or
