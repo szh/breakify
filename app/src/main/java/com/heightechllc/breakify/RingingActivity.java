@@ -32,7 +32,7 @@ import android.widget.TextView;
  * Activity displayed when the time is up. Plays ringtone and vibrates using AlarmRinger.
  */
 public class RingingActivity extends Activity implements View.OnClickListener {
-    public static int REQUEST_ALARM_RING = 0;
+    public static int REQUEST_ALARM_RING = 200;
     public static final int RESULT_ALARM_RING_OK = RESULT_OK;
     public static final int RESULT_ALARM_RING_CANCEL = RESULT_CANCELED;
     public static final int RESULT_ALARM_RING_SNOOZE = RESULT_FIRST_USER;
