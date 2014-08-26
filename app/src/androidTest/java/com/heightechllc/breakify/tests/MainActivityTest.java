@@ -21,6 +21,7 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.test.ActivityInstrumentationTestCase2;
@@ -53,8 +54,7 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         super.setUp();
 
         // Clear the app's shared preferences, and reset them to their defaults
-        PreferenceManager.getDefaultSharedPreferences(getInstrumentation().getTargetContext())
-                .edit().clear().commit();
+        getPrefs().edit().clear().commit();
         PreferenceManager.setDefaultValues(getInstrumentation().getTargetContext(),
                 R.xml.timer_durations_preferences, true);
         PreferenceManager.setDefaultValues(getInstrumentation().getTargetContext(),
@@ -83,10 +83,11 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         super.tearDown();
     }
 
-    // Test that getWorkState() is always accurate
+    // Test that `getWorkState()` is always accurate
 
     @SmallTest
     public void test_workState_startsAsWorking() {
+        // Default state should be "Working"
         assertEquals(MainActivity.WORK_STATE_WORKING, MainActivity.getWorkState(mMainActivity));
     }
 
@@ -106,6 +107,59 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         clickView(resetBtn);
         assertEquals(MainActivity.WORK_STATE_WORKING, MainActivity.getWorkState(mMainActivity));
     }
+
+    @SmallTest
+    public void test_workState_savesToPrefs() {
+        // Start the timer
+        clickView(mCircleTimer);
+        // Skip to the break
+        clickView(mMainActivity.findViewById(R.id.skip_btn));
+
+        // Check shared preferences
+        int actualWorkState = getPrefs().getInt("workState", -1);
+        assertEquals(MainActivity.WORK_STATE_BREAKING, actualWorkState);
+    }
+
+    @SmallTest
+    public void test_workState_doesNotRestoreFromPrefsWhenNotRestoringTimer() {
+        // First destroy the Activity
+        mMainActivity.finish();
+
+        // Set the work state in Preferences to "Breaking"
+        getPrefs().edit().putInt("workState", MainActivity.WORK_STATE_BREAKING).apply();
+
+        // Now recreate the Activity
+        getActivity();
+
+        // Since we weren't restoring a timer, the state should still be the default, "Working"
+
+        // We can't check `MainActivity.getWorkState(Context)` since that just returns the value in
+        //  SharedPreferences. We need to check the work state label to see what state is displayed.
+        TextView workStateLbl = (TextView) mMainActivity.findViewById(R.id.state_lbl);
+        assertEquals(mMainActivity.getString(R.string.state_working),
+                workStateLbl.getText());
+    }
+
+    @SmallTest
+    public void test_workState_restoresFromPrefsWhenRestoringTimer() {
+        // Start the timer
+        clickView(mCircleTimer);
+        // Skip to the break
+        clickView(mMainActivity.findViewById(R.id.skip_btn));
+
+        // Now destroy and recreate the Activity
+        mMainActivity.finish();
+        getActivity();
+
+        // Since we are restoring a timer, the state should be "Breaking".
+
+        // We can't check `MainActivity.getWorkState(Context)` since that just returns the value in
+        //  SharedPreferences. We need to check the work state label to see what state is displayed.
+        TextView workStateLbl = (TextView) mMainActivity.findViewById(R.id.state_lbl);
+        assertEquals(mMainActivity.getString(R.string.state_breaking),
+                workStateLbl.getText());
+    }
+
 
     // Test that the start / stop label always gets updated
 
@@ -194,6 +248,14 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Get the SharedPreferences for the target Context
+     */
+    private SharedPreferences getPrefs() {
+        return PreferenceManager.getDefaultSharedPreferences(
+                getInstrumentation().getTargetContext());
     }
 
 }
