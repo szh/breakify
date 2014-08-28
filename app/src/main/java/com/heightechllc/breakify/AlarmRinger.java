@@ -43,7 +43,7 @@ public class AlarmRinger {
 
     public static final int STREAM_TYPE = AudioManager.STREAM_ALARM;
 
-    private static boolean started;
+    private static boolean ringing;
     private static MediaPlayer mediaPlayer;
 
     /**
@@ -67,13 +67,21 @@ public class AlarmRinger {
     };
 
     /**
+     * Whether the alarm is currently ringing. You do not need to check this before calling
+     *  {@link #start(Context)} or {@link #stop(Context)}, since those methods check on their own.
+     */
+    public static boolean isRinging() {
+        return ringing;
+    }
+
+    /**
      * Stops the alarm
      */
     public static void stop(Context context) {
         // Check if alarm is already stopped
-        if (!started) return;
+        if (!ringing) return;
 
-        started = false;
+        ringing = false;
 
         // Stop vibrating
         getVibrator(context).cancel();
@@ -91,8 +99,8 @@ public class AlarmRinger {
      * Starts the alarm
      */
     public static void start(final Context context) {
-        // Check if we're already running
-        if (started) return;
+        // Check if we're already ringing
+        if (ringing) return;
 
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -104,7 +112,7 @@ public class AlarmRinger {
         // Check if vibration is enabled in preferences
         boolean vibrate = sharedPrefs.getBoolean(AlarmSettingsFragment.KEY_VIBRATE, false);
 
-        if (ring || vibrate) started = true; // Only set `started` if we'll actually do something
+        if (ring || vibrate) ringing = true; // Only set `started` if we'll actually do something
 
         if (vibrate) // Start vibrating the device
             getVibrator(context).vibrate(new long[]{500, 500}, 0);
