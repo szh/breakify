@@ -78,7 +78,7 @@ public class RingingActivityTest extends ActivityInstrumentationTestCase2<Ringin
         setActivity(null);
         mActivity = getActivity();
 
-        TextView prompt = (TextView) mActivity.findViewById(R.id.promptLbl);
+        TextView prompt = (TextView) mActivity.findViewById(R.id.prompt_lbl);
         assertEquals(mActivity.getString(R.string.start_break_prompt), prompt.getText());
 
         // Now set the work state in Preferences to "Breaking"
@@ -88,7 +88,7 @@ public class RingingActivityTest extends ActivityInstrumentationTestCase2<Ringin
         setActivity(null);
         mActivity = getActivity();
 
-        prompt = (TextView) mActivity.findViewById(R.id.promptLbl);
+        prompt = (TextView) mActivity.findViewById(R.id.prompt_lbl);
         assertEquals(mActivity.getString(R.string.start_work_prompt), prompt.getText());
     }
 
@@ -124,7 +124,7 @@ public class RingingActivityTest extends ActivityInstrumentationTestCase2<Ringin
         // First make sure AlarmRinger is running
         assertTrue(AlarmRinger.isRinging());
         // Click the main label
-        TouchUtils.clickView(this, mActivity.findViewById(R.id.promptLbl));
+        TouchUtils.clickView(this, mActivity.findViewById(R.id.prompt_lbl));
         // Make sure it stopped ringing
         assertFalse(AlarmRinger.isRinging());
     }
@@ -159,7 +159,7 @@ public class RingingActivityTest extends ActivityInstrumentationTestCase2<Ringin
     // Test that the buttons work correctly
 
     public void test_okButtonCloseActivity() {
-        Button okBtn = (Button) mActivity.findViewById(R.id.okBtn);
+        Button okBtn = (Button) mActivity.findViewById(R.id.ok_btn);
 
         // OK btn
         TouchUtils.clickView(this, okBtn);
@@ -167,14 +167,14 @@ public class RingingActivityTest extends ActivityInstrumentationTestCase2<Ringin
     }
     public void test_snoozeButtonClosesActivity() {
         restartActivityWithUserAction();
-        Button snoozeBtn = (Button) mActivity.findViewById(R.id.snoozeBtn);
+        Button snoozeBtn = (Button) mActivity.findViewById(R.id.snooze_btn);
 
         TouchUtils.clickView(this, snoozeBtn);
         assertTrue(mActivity.isFinishing());
     }
     public void test_cancelButtonClosesActivity() {
         restartActivityWithUserAction();
-        Button cancelBtn = (Button) mActivity.findViewById(R.id.cancelBtn);
+        Button cancelBtn = (Button) mActivity.findViewById(R.id.cancel_btn);
 
         TouchUtils.clickView(this, cancelBtn);
         assertTrue(mActivity.isFinishing());

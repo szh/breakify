@@ -51,7 +51,7 @@ public class RingingActivity extends Activity implements View.OnClickListener {
                              WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
 
         // Set label text
-        TextView promptLbl = (TextView) findViewById(R.id.promptLbl);
+        TextView promptLbl = (TextView) findViewById(R.id.prompt_lbl);
         int workState = MainActivity.getWorkState(this);
         if (workState == MainActivity.WORK_STATE_WORKING)
             promptLbl.setText(R.string.start_break_prompt);
@@ -59,9 +59,9 @@ public class RingingActivity extends Activity implements View.OnClickListener {
             promptLbl.setText(R.string.start_work_prompt);
 
         // Set button listeners
-        Button okBtn = (Button) findViewById(R.id.okBtn);
-        Button snoozeBtn = (Button) findViewById(R.id.snoozeBtn);
-        Button cancelBtn = (Button) findViewById(R.id.cancelBtn);
+        Button okBtn = (Button) findViewById(R.id.ok_btn);
+        Button snoozeBtn = (Button) findViewById(R.id.snooze_btn);
+        Button cancelBtn = (Button) findViewById(R.id.cancel_btn);
 
         okBtn.setOnClickListener(this);
         snoozeBtn.setOnClickListener(this);
@@ -96,7 +96,7 @@ public class RingingActivity extends Activity implements View.OnClickListener {
     @Override
     public void onBackPressed() {
         // Override the device's back button to function like the "cancel" button
-        Button cancelBtn = (Button) findViewById(R.id.cancelBtn);
+        Button cancelBtn = (Button) findViewById(R.id.cancel_btn);
         cancelBtn.performClick();
     }
 
@@ -104,13 +104,13 @@ public class RingingActivity extends Activity implements View.OnClickListener {
     public void onClick(View view) {
         int result;
         switch (view.getId()) {
-            case R.id.okBtn:
+            case R.id.ok_btn:
                 result = RESULT_ALARM_RING_OK;
                 break;
-            case R.id.snoozeBtn:
+            case R.id.snooze_btn:
                 result = RESULT_ALARM_RING_SNOOZE;
                 break;
-            case R.id.cancelBtn:
+            case R.id.cancel_btn:
                 result = RESULT_ALARM_RING_CANCEL;
                 break;
             default: return;

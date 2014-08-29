@@ -25,7 +25,7 @@
     tools:context="com.heightechllc.breakify.RingingActivity">
 
     <TextView
-        android:id="@+id/promptLbl"
+        android:id="@+id/prompt_lbl"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:gravity="center"
@@ -40,21 +40,21 @@
         style="?android:buttonBarStyle"
         android:orientation="horizontal">
         <Button
-            android:id="@+id/cancelBtn"
+            android:id="@+id/cancel_btn"
             style="?android:buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/cancel" />
         <Button
-            android:id="@+id/snoozeBtn"
+            android:id="@+id/snooze_btn"
             style="?android:buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/snooze" />
         <Button
-            android:id="@+id/okBtn"
+            android:id="@+id/ok_btn"
             style="?android:buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
