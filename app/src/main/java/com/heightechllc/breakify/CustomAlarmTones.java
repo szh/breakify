@@ -65,21 +65,28 @@ public class CustomAlarmTones {
 
             boolean status1, status2;
 
-            // Copy all of the files
-            status1 = copyRawFile(R.raw.breakify_tone_1,
-                    sContext.getString(R.string.alarmtone_title_tone1), true);
-            status2 = copyRawFile(R.raw.breakify_tone_2,
-                    sContext.getString(R.string.alarmtone_title_tone2), false);
+            try {
 
-            // If both files were copied successfully, record it in SharedPreferences
-            if (status1 && status2) {
-                SharedPreferences sharedPrefs =
-                        PreferenceManager.getDefaultSharedPreferences(sContext);
-                sharedPrefs.edit().putBoolean(PREF_KEY_RINGTONES_COPIED, true).apply();
+                // Copy all of the files
+                status1 = copyRawFile(R.raw.breakify_tone_1,
+                        sContext.getString(R.string.alarmtone_title_tone1), true);
+                status2 = copyRawFile(R.raw.breakify_tone_2,
+                        sContext.getString(R.string.alarmtone_title_tone2), false);
+
+                // If both files were copied successfully, record it in SharedPreferences
+                if (status1 && status2) {
+                    SharedPreferences sharedPrefs =
+                            PreferenceManager.getDefaultSharedPreferences(sContext);
+                    sharedPrefs.edit().putBoolean(PREF_KEY_RINGTONES_COPIED, true).apply();
+                }
+
+            } catch (NullPointerException e) {
+                // NullPointerException can occur if sContext goes away while the thread is running
+                e.printStackTrace();
+            } finally {
+                // Clean up
+                sContext = null;
             }
-
-            // Clean up
-            sContext = null;
         }
 
         /**
