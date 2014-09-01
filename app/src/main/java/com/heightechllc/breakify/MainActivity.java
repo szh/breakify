@@ -165,21 +165,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected void onDestroy() {
         super.onDestroy();
 
+        // Enable or disable the RescheduleReceiver, which restores AlarmManagers when the system
+        //  boots or the time changes. We only want it enabled if an alarm is scheduled, or if
+        //  Scheduled Start is enabled.
+        int enabledState;
+        if (timerState == TIMER_STATE_RUNNING || ScheduledStart.isEnabled(this))
+            enabledState = PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+        else
+            enabledState = PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+
+        ComponentName receiver = new ComponentName(this, RescheduleReceiver.class);
+        getPackageManager().setComponentEnabledSetting(
+                receiver, enabledState, PackageManager.DONT_KILL_APP);
+
         // Send any unsent analytics events
         if (mixpanel != null) mixpanel.flush();
-
-        // Enable or disable the boot receiver, which restores running alarms when the system boots.
-        //  We only want it enabled if an alarm is scheduled.
-        ComponentName receiver = new ComponentName(this, BootReceiver.class);
-        if (timerState == TIMER_STATE_RUNNING) {
-            getPackageManager().setComponentEnabledSetting(receiver,
-                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                    PackageManager.DONT_KILL_APP);
-        } else {
-            getPackageManager().setComponentEnabledSetting(receiver,
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    PackageManager.DONT_KILL_APP);
-        }
     }
 
     @Override
@@ -400,7 +400,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     /**
      * Starts the work or break timer
-     * @param duration The number of milliseconds to run the timer for. If currently paused, this is the remaining time.
+     * @param duration The number of milliseconds to run the timer for. If currently paused, this
+     *                 is the remaining time.
      */
     private void startTimer(long duration) {
         // Stop blinking the time and state labels
@@ -446,8 +447,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         AlarmNotifications.showUpcomingNotification(this, ringTime, getWorkState());
 
         // Record when the timer will ring and remove record of time remaining for the paused timer.
-        // Save the scheduled ring time using Unix / epoch time, not elapsedRealtime, b/c
-        //  that is reset on each boot.
+        // Save the scheduled ring time using Unix / epoch time, not elapsedRealtime, b/c that is
+        //  reset on each boot.
         long timeFromNow = ringTime - SystemClock.elapsedRealtime();
         long ringUnixTime = System.currentTimeMillis() + timeFromNow;
         sharedPref.edit()
@@ -764,4 +765,5 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 .listener(listener)
                 .show();
     }
+
 }

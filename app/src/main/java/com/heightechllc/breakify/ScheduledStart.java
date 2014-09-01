@@ -19,9 +19,11 @@ package com.heightechllc.breakify;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 
 import com.heightechllc.breakify.preferences.ScheduledStartSettingsFragment;
@@ -36,6 +38,35 @@ public class ScheduledStart {
      * The request code for the PendingIntent used to start the ScheduledStartReceiver
      */
     public static final int ALARM_MANAGER_REQUEST_CODE = 248;
+
+    /**
+     * Whether Scheduled Start is enabled for at least one day of the week
+     */
+    public static boolean isEnabled(Context c) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
+
+        // Check if it's enabled
+        if (!prefs.getBoolean(ScheduledStartSettingsFragment.KEY_SCHEDULED_ENABLED, false))
+            return false;
+
+        boolean sun = prefs.getBoolean(ScheduledStartSettingsFragment.KEY_SCHEDULED_DAYS_SUNDAY, false);
+        boolean mon = prefs.getBoolean(ScheduledStartSettingsFragment.KEY_SCHEDULED_DAYS_MONDAY, false);
+        boolean tue = prefs.getBoolean(ScheduledStartSettingsFragment.KEY_SCHEDULED_DAYS_TUESDAY, false);
+        boolean wed = prefs.getBoolean(ScheduledStartSettingsFragment.KEY_SCHEDULED_DAYS_WEDNESDAY, false);
+        boolean thu = prefs.getBoolean(ScheduledStartSettingsFragment.KEY_SCHEDULED_DAYS_THURSDAY, false);
+        boolean fri = prefs.getBoolean(ScheduledStartSettingsFragment.KEY_SCHEDULED_DAYS_FRIDAY, false);
+        boolean sat = prefs.getBoolean(ScheduledStartSettingsFragment.KEY_SCHEDULED_DAYS_SATURDAY, false);
+
+        // Count the number of enabled days
+        int numDays = 0;
+        boolean[] daysArray = {sun, mon, tue, wed, thu, fri, sat};
+        for (boolean dayEnabled : daysArray) {
+            if (dayEnabled) numDays++;
+        }
+
+        // Check if any days are enabled
+        return numDays > 0;
+    }
 
     /**
      * Schedules the Scheduled Start, according to the current settings in
@@ -130,8 +161,12 @@ public class ScheduledStart {
                 new Intent(c, ScheduledStartReceiver.class), PendingIntent.FLAG_UPDATE_CURRENT);
 
         AlarmManager alarmManager = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
-        // TODO: What if the time zone changes?
         alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), pi);
+
+        // Make sure the RescheduleReceiver is enabled
+        ComponentName receiver = new ComponentName(c, RescheduleReceiver.class);
+        c.getPackageManager().setComponentEnabledSetting(receiver,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
     }
 
     /**
@@ -142,5 +177,16 @@ public class ScheduledStart {
                 new Intent(c, ScheduledStartReceiver.class), PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager alarmManager = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
         alarmManager.cancel(pi);
+
+        // Disabled the RescheduleReceiver if a timer isn't running
+        int enabledState;
+        if (PreferenceManager.getDefaultSharedPreferences(c).getLong("schedRingTime", 0) != 0)
+            enabledState = PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+        else
+            enabledState = PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+
+        ComponentName receiver = new ComponentName(c, RescheduleReceiver.class);
+        c.getPackageManager().setComponentEnabledSetting(
+                receiver, enabledState, PackageManager.DONT_KILL_APP);
     }
 }

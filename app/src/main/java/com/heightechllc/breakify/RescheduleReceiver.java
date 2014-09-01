@@ -28,21 +28,27 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 
 // Note: This can be tested using:
-// `adb shell am broadcast -a "android.intent.action.BOOT_COMPLETED" -n com.heightechllc.breakify/.BootReceiver`
+// `adb shell am broadcast -a "android.intent.action.BOOT_COMPLETED" -n com.heightechllc.breakify/.RescheduleReceiver`
 
 /**
- * BroadcastReceiver for BOOT_COMPLETED, to re-schedule the AlarmManager if an alarm is saved in
- *  SharedPreferences, since all alarms in AlarmManager are cancelled when the system shuts down.
+ * BroadcastReceiver for BOOT_COMPLETED, TIME_SET and TIMEZONE_CHANGED, to re-schedule the
+ *  AlarmManagers from the values in SharedPreferences. (All alarms in AlarmManager are
+ *  cancelled when the system shuts down.)
  */
-public class BootReceiver extends BroadcastReceiver {
+public class RescheduleReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        // Only react to BOOT_COMPLETED
-        if (!intent.getAction().equals("android.intent.action.BOOT_COMPLETED")) return;
+        // Reschedule the Scheduled Start. We need to do this on all the Intent actions, since
+        //  it must be scheduled for a specific time of day (e.g. 9AM), not based on elapsedRealtime
+        //  (which isn't effected by time changes).
+        ScheduledStart.schedule(context);
 
         //
         // Get the saved alarm from SharedPreferences, and schedule it with AlarmManager
         //
+
+        // Only restore the saved timer on system boot
+        if (!intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) return;
 
         // Get the scheduled ring time (which will only be set if the timer was running)
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
@@ -81,9 +87,5 @@ public class BootReceiver extends BroadcastReceiver {
                     sharedPref.getInt("workState", MainActivity.WORK_STATE_WORKING)
             );
         }
-
-
-        // Now reschedule the Scheduled Start
-        ScheduledStart.schedule(context);
     }
 }
