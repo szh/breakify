@@ -24,7 +24,7 @@ I'm writing this as a fun side project, so I'll get to things whenever I do. If 
 Building and Running
 ---
 Just clone this repository and build it in Android Studio, or run `./gradlew assembleDebug` or `./gradlew assembleRelease`.
-To run the tests on a device or simulator, run `./gradlew connectedAndroidTest`, or you can just use Android Studio and run the project with the "Android Tests" run configuration.
+To run the tests on a device or simulator, run `./gradlew connectedCheck`, or you can just use Android Studio and run the project with the "Android Tests" run configuration.
 
 Contributing
 ---
