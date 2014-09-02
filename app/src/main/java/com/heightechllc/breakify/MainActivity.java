@@ -144,7 +144,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
         // Check if analytics are enabled in preferences
-        if (sharedPref.getBoolean(MiscSettingsFragment.KEY_ANALYTICS_ENABLED, false))
+        if (sharedPref.getBoolean(MiscSettingsFragment.KEY_ANALYTICS_ENABLED, false) &&
+                !BuildConfig.DEBUG)
             mixpanel = MixpanelAPI.getInstance(this, "d78a075fc861c288e24664a8905a6698");
 
         // Handle the intent
