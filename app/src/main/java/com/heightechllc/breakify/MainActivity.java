@@ -619,6 +619,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (oldWorkState == WORK_STATE_WORKING) setWorkState(WORK_STATE_BREAKING);
         else setWorkState(WORK_STATE_WORKING);
 
+        // We want to start the timer from scratch, not from a paused state
+        timerState = TIMER_STATE_STOPPED;
+        // Start the timer
         startTimer(duration * 60000); // Multiply into milliseconds
 
         // Analytics
