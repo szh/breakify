@@ -113,10 +113,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
 
         // Set up the default values for the preferences
-        PreferenceManager.setDefaultValues(this, R.xml.timer_durations_preferences, false);
-        PreferenceManager.setDefaultValues(this, R.xml.alarm_preferences, false);
-        PreferenceManager.setDefaultValues(this, R.xml.scheduled_start_preferences, false);
-        PreferenceManager.setDefaultValues(this, R.xml.misc_preferences, false);
+        PreferenceManager.setDefaultValues(this, R.xml.timer_durations_preferences, true);
+        PreferenceManager.setDefaultValues(this, R.xml.alarm_preferences, true);
+        PreferenceManager.setDefaultValues(this, R.xml.scheduled_start_preferences, true);
+        PreferenceManager.setDefaultValues(this, R.xml.misc_preferences, true);
 
         setContentView(R.layout.activity_main);
 

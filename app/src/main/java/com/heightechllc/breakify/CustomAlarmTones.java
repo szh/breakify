@@ -167,8 +167,10 @@ public class CustomAlarmTones {
                     editor.putString(PREF_KEY_RINGTONE_DEFAULT, newUri.toString());
 
                     // Check if the ringtone preference is currently set to "default"
-                    if (sharedPrefs.getString(AlarmSettingsFragment.KEY_RINGTONE, "")
-                            .equals(sContext.getString(R.string.default_ringtone_path))) {
+                    String ringTonePref =
+                            sharedPrefs.getString(AlarmSettingsFragment.KEY_RINGTONE, null);
+                    if (ringTonePref == null ||
+                        ringTonePref.equals(sContext.getString(R.string.default_ringtone_path))) {
                         // Set this as the ringtone, since it's the new default
                         editor.putString(AlarmSettingsFragment.KEY_RINGTONE, newUri.toString());
                     }
