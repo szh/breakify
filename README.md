@@ -19,6 +19,7 @@ Todo
 ---
 First of all, we need more tests.
 Second, it would be nice to save statistics and show graphs of how much working v.s. breaking the user is getting in.
+You can also see all the `TODO:` items in the code.
 I'm writing this as a fun side project, so I'll get to things whenever I do. If you want to help out though, you're more than welcome to. Keep reading below for instructions.
 
 Building and Running
