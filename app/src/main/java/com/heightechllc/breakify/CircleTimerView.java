@@ -298,9 +298,12 @@ public class CircleTimerView extends View implements View.OnTouchListener {
     public void updateTimeLbl(long millis) {
         if (timeLbl == null) return;
 
-        // Check if we already updated the TextView for this second
+        // Convert from milliseconds to seconds
         int seconds = (int) millis / 1000;
+
+        // Check if we already updated the TextView for this second
         if (seconds == lastUpdatedSecond) return;
+        lastUpdatedSecond = seconds;
 
         // Get formatted time string with seconds + 1, since we want it to say 10:00 (or whatever),
         //  not 09:59 for the first second. Why? Because when humans count down from 10, we start
