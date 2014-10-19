@@ -22,23 +22,4 @@
         <!-- Customize your theme here. -->
     </style>
 
-    <!-- Always use the KitKat theme for the UndoBar -->
-    <!-- <style name="UndoBar" parent="UndoBarKitKat" />
-    <style name="UndoBarMessage" parent="UndoBarMessageKitKat" />
-    <style name="UndoBarButton" parent="UndoBarButtonKitKat" /> -->
-    <!-- Override the style to change the padding -->
-    <!-- <style name="UndoBarKitKat" parent="UndoBarClassic">
-        <item name="android:background">@drawable/toast_frame_holo</item>
-        <item name="android:padding">0.0dip</item>
-        <item name="android:layout_marginLeft">@dimen/undobar_horizontal_margin</item>
-        <item name="android:layout_marginRight">@dimen/undobar_horizontal_margin</item>
-    </style> -->
-    <!-- Override the style to make the text not bold -->
-    <!-- <style name="UndoBarButtonKitKat" parent="UndoBarButtonClassic">
-        <item name="android:layout_gravity">center_vertical</item>
-        <item name="android:background">@drawable/toast_frame_holo_button</item>
-        <item name="android:paddingRight">25dp</item>
-        <item name="android:textStyle">normal</item>
-    </style> -->
-
 </resources>

@@ -17,10 +17,9 @@
 
 <resources>
 
-    <!-- Base application theme. -->
-    <!--<style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
-        &lt;!&ndash; Customize your theme here. &ndash;&gt;
+    <!-- Override the base application theme, to use material design -->
+    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:colorPrimaryDark">@color/timer_background</item>
-    </style>-->
+    </style>
 
 </resources>
