@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/szh/breakify.svg?branch=master)](https://travis-ci.org/szh/breakify)
+
 What is Breakify?
 =============
 Breakify is a simple Android app that reminds you to take breaks.
