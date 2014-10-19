@@ -2,18 +2,17 @@ language: android
 jdk: oraclejdk7
 env:
   matrix:
-    - ANDROID_TARGET=android-21  ANDROID_ABI=armeabi-v7a
+    - ANDROID_TARGET=android-21  ANDROID_ABI=x86
 
 android:
   components:
     - build-tools-21.0.1
     - android-21
     - extra-android-m2repository
-    # Use a mix of ARM and x86 processors, and different API levels
-    - sys-img-armeabi-v7a-android-21
-    - sys-img-x86-v7a-android-19
-    - sys-img-armeabi-v7a-android-16
-    - sys-img-x86-v7a-android-14
+    - sys-img-x86-android-14
+    - sys-img-x86-android-16
+    - sys-img-x86-android-19
+    - sys-img-x86-android-21
 
 before_script:
   # Create and start emulator
