@@ -15,60 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import groovy.swing.SwingBuilder
-
-// Get password for signing key
-// Code adapted from http://stackoverflow.com/a/24360969/560722
-gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.hasTask(':app:assembleRelease')) {
-        def storePass = ''
-        def keyPass = ''
-
-        if (System.console() == null) {
-            // Probably running in Android Studio, so show a GUI dialog
-            new SwingBuilder().edt {
-                dialog(modal: true, title: 'Enter password', alwaysOnTop: true, resizable: false,
-                        locationRelativeTo: null, pack: true, show: true) {
-                    vbox {
-                        label(text: 'Enter keystore password')
-                        def storePassInput = passwordField()
-                        label(text: 'Enter key password')
-                        def keyPassInput = passwordField()
-                        button(defaultButton: true, text: 'OK', actionPerformed: {
-                            storePass = new String(storePassInput.password)
-                            keyPass = new String(keyPassInput.password)
-                            dispose() // Close dialog
-                        })
-                    }
-                }
-            }
-        } else {
-            // Get passwords from console
-            storePass = System.console().readPassword('\nEnter keystore password: ')
-            keyPass = System.console().readPassword('\nEnter key password: ')
-        }
-
-        // Check that passwords were entered
-        if(storePass.size() <= 0 || keyPass.size() <= 0) {
-            throw new InvalidUserDataException("You must enter both passwords")
-        }
-
-        android.signingConfigs.release.storePassword = storePass
-        android.signingConfigs.release.keyPassword = keyPass
-    }
-}
-
-
-
 apply plugin: 'com.android.application'
 
 android {
-    signingConfigs {
-        release {
-            storeFile file("keystore.jks")
-            keyAlias 'breakify'
-        }
-    }
     compileSdkVersion 21
     defaultConfig {
         applicationId 'com.heightechllc.breakify'
@@ -79,7 +28,6 @@ android {
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.release
             runProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
