@@ -24,4 +24,4 @@ before_script:
 
 script:
   # Run tests, and do a logcat dump if anything fails
-  - "./gradlew connectedCheck --info || (adb logcat -d && echo "TESTS FAILED" && exit 1)"
+  - ./gradlew connectedCheck --info || (adb logcat -d && echo "TESTS FAILED" && exit 1)
