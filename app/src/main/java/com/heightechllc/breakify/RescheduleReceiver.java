@@ -17,6 +17,7 @@
 
 package com.heightechllc.breakify;
 
+import android.annotation.TargetApi;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -36,6 +37,7 @@ import android.preference.PreferenceManager;
  *  cancelled when the system shuts down.)
  */
 public class RescheduleReceiver extends BroadcastReceiver {
+    @TargetApi(19)
     @Override
     public void onReceive(Context context, Intent intent) {
         // Reschedule the Scheduled Start. We need to do this on all the Intent actions, since

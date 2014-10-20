@@ -17,6 +17,7 @@
 
 package com.heightechllc.breakify;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
@@ -404,6 +405,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * @param duration The number of milliseconds to run the timer for. If currently paused, this
      *                 is the remaining time.
      */
+    @TargetApi(19)
     private void startTimer(long duration) {
         // Stop blinking the time and state labels
         timeLbl.clearAnimation();
