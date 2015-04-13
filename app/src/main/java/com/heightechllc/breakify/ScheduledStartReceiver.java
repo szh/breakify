@@ -41,7 +41,7 @@ public class ScheduledStartReceiver extends BroadcastReceiver {
                                 Intent.FLAG_ACTIVITY_NO_USER_ACTION);
             context.startActivity(mainIntent);
 
-            // TODO: Show notification
+            // TODO: Show notification with LED
         }
 
         // Now reschedule for the next time

@@ -18,21 +18,21 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 21
+    compileSdkVersion 22
     defaultConfig {
-        applicationId 'com.heightechllc.breakify'
+        applicationId 'me.szheigh.breakify'
         minSdkVersion 14
-        targetSdkVersion 21
+        targetSdkVersion 22
         versionCode 1
         versionName '1.0'
     }
     buildTypes {
         release {
-            runProguard true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    buildToolsVersion '21.0.1'
+    buildToolsVersion '22.0.1'
 }
 
 dependencies {
@@ -45,5 +45,5 @@ dependencies {
     compile 'com.cocosw:undobar:1.+@aar'
 
     // Android Support Library
-    compile 'com.android.support:support-v4:21.0.+'
+    compile 'com.android.support:support-v4:22.0.+'
 }

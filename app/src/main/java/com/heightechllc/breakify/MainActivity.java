@@ -754,7 +754,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     /**
-     * Shows an UndoBar with a duration of 3500ms and a style with fade animations
+     * Shows an UndoBar with a duration of 3500ms
      * @param message The message to display on the toast
      * @param token The Parcelable to be passed to the undo listener if the user pressed "Undo"
      * @param listener The UndoListener to be notified if the user presses "Undo"
@@ -763,9 +763,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
                              UndoBarController.UndoListener listener) {
         new UndoBarController.UndoBar(this)
                 .duration(3500)
-                .style(UndoBarController.UNDOSTYLE.setAnim( // Use base style with custom animations
-                        AnimationUtils.loadAnimation(this, R.anim.undobar_fade_in),
-                        AnimationUtils.loadAnimation(this, R.anim.undobar_fade_out)))
                 .message(message)
                 .token(token)
                 .listener(listener)
